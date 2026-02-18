@@ -46,7 +46,7 @@ const OrderSchema = new mongoose.Schema({
   },
   paymentMethod: {
     type: String,
-    enum: ['COD', 'bKash', 'Nagad', 'Card'],
+    enum: ['COD', 'cash_on_delivery', 'bKash', 'bkash', 'Nagad', 'Card', 'ssl_commerz'],
     required: true,
   },
   paymentStatus: {
@@ -81,14 +81,16 @@ const OrderSchema = new mongoose.Schema({
   },
 });
 
-// Generate order number before saving
-OrderSchema.pre('save', async function(next) {
-  if (!this.orderNumber) {
+// Generate order number before validation
+OrderSchema.pre('validate', async function() {
+  if (this.isNew && !this.orderNumber) {
     const count = await mongoose.model('Order').countDocuments();
     this.orderNumber = `ORD${Date.now()}${count + 1}`;
   }
+});
+
+OrderSchema.pre('save', function() {
   this.updatedAt = Date.now();
-  next();
 });
 
 export default mongoose.models.Order || mongoose.model('Order', OrderSchema);

@@ -142,39 +142,89 @@ export default async function Home() {
       </section>
 
       {/* Categories Section */}
-      <section className="bg-gradient-to-br from-gray-50 to-gray-100 py-20">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">
+      <section className="bg-white py-24">
+        <div className="container mx-auto px-4 text-center">
+          <div className="mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900">
               Shop by Category
             </h2>
-            <p className="text-gray-600 text-lg">
-              Find exactly what you're looking for
+            <p className="text-gray-500 text-lg max-w-2xl mx-auto">
+              Find exactly what you're looking for across our diverse collections
             </p>
           </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
             {[
-              { name: 'Shirt', emoji: '👔', color: 'from-blue-400 to-blue-600' },
-              { name: 'T-Shirt', emoji: '👕', color: 'from-green-400 to-green-600' },
-              { name: 'Pant', emoji: '👖', color: 'from-purple-400 to-purple-600' },
-              { name: 'Saree', emoji: '🥻', color: 'from-pink-400 to-pink-600' },
+              { 
+                name: 'Shirt', 
+                link: '/products?category=Shirt',
+                image: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?q=80&w=500&auto=format&fit=crop'
+              },
+              { 
+                name: 'T-Shirt', 
+                link: '/products?category=T-Shirt',
+                image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=500&auto=format&fit=crop'
+              },
+              { 
+                name: 'Pant', 
+                link: '/products?category=Pant',
+                image: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?q=80&w=500&auto=format&fit=crop'
+              },
+              { 
+                name: 'Saree', 
+                link: '/products?category=Saree',
+                image: 'https://images.unsplash.com/photo-1610030464440-a88b4202c282?q=80&w=500&auto=format&fit=crop'
+              },
+              { 
+                name: 'Jeans', 
+                link: '/products?category=Jeans',
+                image: 'https://images.unsplash.com/photo-1542272604-787c3835535d?q=80&w=500&auto=format&fit=crop'
+              },
+              { 
+                name: 'Kurti', 
+                link: '/products?category=Kurti',
+                image: 'https://images.unsplash.com/photo-1620601815142-b83d8ca237bd?q=80&w=500&auto=format&fit=crop'
+              },
+              { 
+                name: 'Salwar', 
+                link: '/products?category=Salwar',
+                image: 'https://images.unsplash.com/photo-1617173944883-6ffbd35d584d?q=80&w=500&auto=format&fit=crop'
+              },
+              { 
+                name: 'Others', 
+                link: '/products?category=Others',
+                image: 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?q=80&w=500&auto=format&fit=crop'
+              },
             ].map((category) => (
               <Link
                 key={category.name}
-                href={`/products?category=${category.name}`}
-                className="group relative bg-white rounded-2xl p-8 text-center hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden"
+                href={category.link}
+                className="group bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden"
               >
-                <div className={`absolute inset-0 bg-gradient-to-br ${category.color} opacity-0 group-hover:opacity-10 transition-opacity`}></div>
-                <div className="text-6xl mb-4">{category.emoji}</div>
-                <h3 className="text-xl font-bold text-gray-800 group-hover:text-purple-600 transition">
-                  {category.name}
-                </h3>
-                <p className="text-sm text-gray-500 mt-2">Explore Collection →</p>
+                <div className="relative h-64 w-full overflow-hidden">
+                  <Image 
+                    src={category.image}
+                    alt={category.name}
+                    fill
+                    className="object-cover transform group-hover:scale-110 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+                </div>
+                <div className="p-6">
+                  <h3 className="text-xl font-bold text-gray-800 mb-1">
+                    {category.name}
+                  </h3>
+                  <span className="text-sm text-blue-500 font-medium group-hover:translate-x-1 inline-block transition-transform">
+                    Explore Collection →
+                  </span>
+                </div>
               </Link>
             ))}
           </div>
         </div>
+        
+        {/* Purple/Pink Gradient Bar */}
+        <div className="w-full h-24 bg-gradient-to-r from-purple-600 via-fuchsia-500 to-pink-500 mt-12 opacity-90"></div>
       </section>
 
       {/* CTA Section */}

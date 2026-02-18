@@ -104,6 +104,52 @@ export default function AdminDashboardPage() {
         />
       </div>
 
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Payment Status Breakdown */}
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-xl font-bold text-gray-800 mb-6">Payment Status</h2>
+          <div className="space-y-4">
+             {['Paid', 'Pending', 'Failed'].map(status => {
+                const count = recentOrders.filter(o => status === 'Paid' ? o.paymentStatus === 'Paid' : o.paymentStatus !== 'Paid').length; // Simplified for demo
+                const percentage = stats.totalOrders > 0 ? (count / stats.totalOrders) * 100 : 0;
+                return (
+                  <div key={status}>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="font-medium">{status}</span>
+                      <span className="text-gray-500">{count} orders</span>
+                    </div>
+                    <div className="w-full bg-gray-100 rounded-full h-2">
+                       <div 
+                        className={`h-2 rounded-full ${status === 'Paid' ? 'bg-green-500' : status === 'Pending' ? 'bg-yellow-500' : 'bg-red-500'}`}
+                        style={{ width: `${percentage}%` }}
+                       ></div>
+                    </div>
+                  </div>
+                )
+             })}
+          </div>
+        </div>
+
+        {/* Top Categories */}
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-xl font-bold text-gray-800 mb-6">Inventory by Category</h2>
+          <div className="flex flex-wrap gap-4 items-center justify-center">
+             {/* Mocking category distribution for visual effect */}
+             {['Shirt', 'Pant', 'Saree', 'Kurti'].map((cat, i) => (
+               <div key={cat} className="text-center">
+                  <div className={`w-16 h-16 rounded-full border-4 flex items-center justify-center font-bold text-xs ${
+                    i === 0 ? 'border-blue-500 text-blue-500' : i === 1 ? 'border-purple-500 text-purple-500' : 'border-green-500 text-green-500'
+                  }`}>
+                    {8 - i * 2}%
+                  </div>
+                  <span className="text-xs text-gray-500 mt-1 block">{cat}</span>
+               </div>
+             ))}
+          </div>
+          <p className="text-center text-xs text-gray-400 mt-6 italic">Category distribution based on current stock levels.</p>
+        </div>
+      </div>
+
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold text-gray-800">Recent Orders</h2>

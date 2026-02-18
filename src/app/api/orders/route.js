@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import connectDB from '@/lib/mongodb';
 import Order from '@/models/Order';
+import { sendSMS } from '@/lib/sms';
+import { sendEmail } from '@/lib/email';
 
 // GET all orders
 export async function GET(request) {
@@ -64,7 +66,20 @@ export async function POST(request) {
 
     const order = await Order.create(orderData);
     
-    // TODO: Send SMS notification
+    // Send SMS notification
+    if (order.deliveryAddress?.phone) {
+      const message = `Order Placed! Your order #${order.orderNumber} for ৳${order.finalAmount} has been received. Track at: ${process.env.NEXTAUTH_URL}/orders/${order._id}`;
+      await sendSMS(order.deliveryAddress.phone, message);
+    }
+
+    // Send Email notification
+    if (session.user.email) {
+      await sendEmail({
+        to: session.user.email,
+        subject: `Order Confirmation - #${order.orderNumber}`,
+        html: `<h1>Thank you for your order!</h1><p>Your order for ${order.items.length} items has been received.</p><p>Total: ৳${order.finalAmount}</p>`
+      });
+    }
     
     return NextResponse.json({
       success: true,

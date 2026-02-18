@@ -63,9 +63,8 @@ const ProductSchema = new mongoose.Schema({
 });
 
 // Update the updatedAt field on save
-ProductSchema.pre('save', function(next) {
+ProductSchema.pre('save', function() {
   this.updatedAt = Date.now();
-  next();
 });
 
 export default mongoose.models.Product || mongoose.model('Product', ProductSchema);

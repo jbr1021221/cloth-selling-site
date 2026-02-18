@@ -22,7 +22,7 @@ export default function CheckoutPage() {
       state: '',
       zip: '',
     },
-    paymentMethod: 'COD',
+    paymentMethod: 'cash_on_delivery',
   });
 
   useEffect(() => {

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Order from '@/models/Order';
+import { sendSMS } from '@/lib/sms';
 
 // GET single order
 export async function GET(request, { params }) {
@@ -49,7 +50,11 @@ export async function PUT(request, { params }) {
       );
     }
     
-    // TODO: Send SMS notification on status change
+    // Send SMS notification on status change
+    if (order.deliveryAddress?.phone) {
+      const message = `Order Update: Your order #${order.orderNumber} is now ${order.status.toUpperCase()}. You can check details here: ${process.env.NEXTAUTH_URL}/orders/${order._id}`;
+      await sendSMS(order.deliveryAddress.phone, message);
+    }
     
     return NextResponse.json({
       success: true,

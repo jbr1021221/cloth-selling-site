@@ -27,7 +27,8 @@ async function getProducts(searchParams) {
 }
 
 export default async function ProductsPage({ searchParams }) {
-  const { data: products } = await getProducts(searchParams);
+  const resolvedSearchParams = await searchParams;
+  const { data: products } = await getProducts(resolvedSearchParams);
 
   return (
     <div className="container mx-auto px-4 py-8">

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Order from '@/models/Order';
+import { sendSMS } from '@/lib/sms';
 
 export async function POST(request) {
   try {
@@ -22,7 +23,7 @@ export async function POST(request) {
       paymentStatus: paymentStatusMapping[status] || 'Pending',
     };
 
-    // If payment is successful, maybe update some other fields
+    // If payment is successful, update order status
     if (status === 'success') {
       updateData.status = 'Processing';
     }
@@ -37,7 +38,11 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: 'Order not found' }, { status: 404 });
     }
 
-    // TODO: Send confirmation SMS on success
+    // Send confirmation SMS on success
+    if (status === 'success' && order.deliveryAddress?.phone) {
+      const message = `Payment Received! We have received payment for order #${order.orderNumber}. We are now processing it. Thank you!`;
+      await sendSMS(order.deliveryAddress.phone, message);
+    }
     
     return NextResponse.json({
       success: true,
