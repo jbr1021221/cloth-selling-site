@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { FiX, FiPlus, FiTrash2 } from 'react-icons/fi';
+import toast from 'react-hot-toast';
 
 const categories = ['Shirt', 'T-Shirt', 'Pant', 'Jeans', 'Saree', 'Salwar', 'Kurti', 'Others'];
 const sizesList = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '38', '40', '42', '44'];
@@ -214,11 +215,45 @@ export default function ProductForm({ product, onSubmit, onCancel }) {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Product Images (URLs)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Product Images</label>
+              
+              {/* File Upload */}
+              <div className="flex flex-col gap-2 mb-4">
+                <p className="text-xs text-gray-500">Upload new image:</p>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+
+                    const formData = new FormData();
+                    formData.append('file', file);
+
+                    try {
+                      const res = await fetch('/api/upload', {
+                        method: 'POST',
+                        body: formData,
+                      });
+                      const data = await res.json();
+                      if (data.success) {
+                        setFormData(prev => ({ ...prev, images: [...prev.images, data.url] }));
+                        toast.success('Image uploaded!');
+                      } else {
+                        toast.error(data.error);
+                      }
+                    } catch (err) {
+                      toast.error('Upload failed');
+                    }
+                  }}
+                  className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+              </div>
+
               <div className="flex gap-2 mb-2">
                 <input
                   type="text"
-                  placeholder="Image URL"
+                  placeholder="Or paste Image URL"
                   value={newImage}
                   onChange={(e) => setNewImage(e.target.value)}
                   className="flex-1 border border-gray-300 rounded-md shadow-sm p-2 text-sm"

@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import useCartStore from '@/store/cartStore';
 import toast from 'react-hot-toast';
 
 export default function CheckoutPage() {
   const router = useRouter();
+  const { data: session } = useSession();
   const { items, getTotal, clearCart } = useCartStore();
   const [loading, setLoading] = useState(false);
   
@@ -20,8 +22,18 @@ export default function CheckoutPage() {
       state: '',
       zip: '',
     },
-    paymentMethod: 'cash_on_delivery',
+    paymentMethod: 'COD',
   });
+
+  useEffect(() => {
+    if (session?.user) {
+      setFormData(prev => ({
+        ...prev,
+        name: session.user.name || '',
+        email: session.user.email || '',
+      }));
+    }
+  }, [session]);
 
   const subtotal = getTotal();
   const shippingCharge = subtotal >= 1000 ? 0 : 60;
@@ -47,21 +59,25 @@ export default function CheckoutPage() {
 
     try {
       const orderData = {
-        user: formData.email, // In real app, use authenticated user ID
         items: items.map(item => ({
           product: item.id,
+          name: item.name,
           quantity: item.quantity,
           price: item.price,
           size: item.size,
           color: item.color,
+          image: item.image || (item.images && item.images[0])
         })),
-        totalAmount: total,
-        shippingAddress: formData.address,
+        totalAmount: subtotal,
+        shippingCharge: shippingCharge,
+        finalAmount: total,
         paymentMethod: formData.paymentMethod,
-        customerInfo: {
+        deliveryAddress: {
           name: formData.name,
-          email: formData.email,
           phone: formData.phone,
+          address: formData.address.street,
+          city: formData.address.city,
+          postalCode: formData.address.zip,
         },
       };
 
@@ -81,7 +97,13 @@ export default function CheckoutPage() {
 
       toast.success('Order placed successfully!');
       clearCart();
-      router.push(`/orders/${data.data._id}`);
+
+      // If online payment, redirect to payment gateway
+      if (formData.paymentMethod !== 'COD') {
+        router.push(`/api/payment/initiate?orderId=${data.data._id}`);
+      } else {
+        router.push(`/orders/${data.data._id}`);
+      }
     } catch (error) {
       toast.error(error.message);
     } finally {

@@ -1,14 +1,21 @@
 import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import connectDB from '@/lib/mongodb';
 import Order from '@/models/Order';
 
 // GET all orders
 export async function GET(request) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
     await connectDB();
     
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
+    const userId = session.user.role === 'admin' ? searchParams.get('userId') : session.user.id;
     const status = searchParams.get('status');
     
     let query = {};
@@ -42,10 +49,20 @@ export async function GET(request) {
 // POST create new order
 export async function POST(request) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
     await connectDB();
     const body = await request.json();
     
-    const order = await Order.create(body);
+    const orderData = {
+      ...body,
+      user: session.user.id,
+    };
+
+    const order = await Order.create(orderData);
     
     // TODO: Send SMS notification
     
