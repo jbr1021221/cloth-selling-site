@@ -30,7 +30,7 @@ const ProductSchema = new mongoose.Schema({
   }],
   sizes: [{
     type: String,
-    enum: ['XS', 'S', 'M', 'L', 'XL', 'XXL', '28', '30', '32', '34', '36', '38', '40'],
+    enum: ['XS', 'S', 'M', 'L', 'XL', 'XXL', '28', '30', '32', '34', '36', '38', '40', '42', '44'],
   }],
   colors: [{
     type: String,
@@ -43,6 +43,7 @@ const ProductSchema = new mongoose.Schema({
   sku: {
     type: String,
     unique: true,
+    sparse: true,
   },
   vendor: {
     type: mongoose.Schema.Types.ObjectId,
