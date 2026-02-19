@@ -92,7 +92,10 @@ class OrderController extends Controller
      */
     public function show(string $id)
     {
-        return \App\Models\Order::with(['items', 'user', 'vendor'])->findOrFail($id);
+        return \App\Models\Order::with(['items', 'user', 'vendor'])
+            ->where('id', $id)
+            ->orWhere('order_number', $id)
+            ->firstOrFail();
     }
 
     /**
@@ -101,14 +104,14 @@ class OrderController extends Controller
     public function update(Request $request, string $id)
     {
         return \Illuminate\Support\Facades\DB::transaction(function () use ($request, $id) {
-            $order = \App\Models\Order::findOrFail($id);
+            $order = \App\Models\Order::where('id', $id)
+                ->orWhere('order_number', $id)
+                ->firstOrFail();
             
-            // Only allow updating order status/details, usually items shouldn't be changed easily without complex logic
-            // Assuming basic update for now
+            // Only allow updating order status/details
             $validated = $request->validate([
                'status' => 'in:Pending,Processing,Shipped,Delivered,Cancelled',
                'payment_status' => 'in:Pending,Paid,Failed',
-               // Add other fields as necessary
             ]);
 
             $order->update($validated);
@@ -121,7 +124,11 @@ class OrderController extends Controller
      */
     public function destroy(string $id)
     {
-         \App\Models\Order::destroy($id);
+         $order = \App\Models\Order::where('id', $id)
+            ->orWhere('order_number', $id)
+            ->firstOrFail();
+            
+         $order->delete();
          return response()->noContent();
     }
 }

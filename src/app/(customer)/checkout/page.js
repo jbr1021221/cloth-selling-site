@@ -89,10 +89,11 @@ export default function CheckoutPage() {
         },
       };
 
-      const res = await fetch('/api/orders', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json', // Force JSON response
         },
         body: JSON.stringify(orderData),
       });
@@ -100,24 +101,48 @@ export default function CheckoutPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        // Handle Laravel validation errors or messages
-        throw new Error(data.message || 'Order failed');
+        let errorMessage = data.message || 'Order failed';
+
+        // Handle Laravel validation errors detailed response
+        if (data.errors) {
+          const errorKeys = Object.keys(data.errors);
+          // Check for product ID errors which indicate stale cart
+          if (errorKeys.some(key => key.includes('product_id'))) {
+            errorMessage = "Your cart contains outdated items. Please clear your cart and try again.";
+          } else {
+            // Show the first validation error
+            const firstError = Object.values(data.errors)[0];
+            errorMessage = Array.isArray(firstError) ? firstError[0] : firstError;
+          }
+        }
+        // Fallback: If no standard message/errors, show raw data for debugging
+        else if (!data.message) {
+          errorMessage = `Server Error (${res.status}): ${JSON.stringify(data)}`;
+        }
+
+        throw new Error(errorMessage);
       }
 
       toast.success('Order placed successfully!');
       clearCart();
 
-      // If online payment, redirect to payment gateway
       if (formData.paymentMethod !== 'cash_on_delivery') {
-        // Use data.id (Laravel) instead of data.data._id (Mongo)
         router.push(`/api/payment/initiate?orderId=${data.id}`);
       } else {
         router.push(`/orders/${data.id}`);
       }
     } catch (error) {
+      console.error('Order Error:', error);
       toast.error(error.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleClearCart = () => {
+    if (confirm('Are you sure you want to clear your cart?')) {
+      clearCart();
+      toast.success('Cart cleared');
     }
   };
 
@@ -283,13 +308,23 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
-            >
-              {loading ? 'Placing Order...' : 'Place Order'}
-            </button>
+            <div className="flex flex-col gap-3">
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
+              >
+                {loading ? 'Placing Order...' : 'Place Order'}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleClearCart}
+                className="w-full bg-red-100 text-red-600 py-3 rounded-lg font-semibold hover:bg-red-200 transition-colors"
+              >
+                Clear Cart & Start Over
+              </button>
+            </div>
           </form>
         </div>
 

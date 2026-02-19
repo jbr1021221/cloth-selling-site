@@ -36,13 +36,15 @@ Route::middleware('auth:sanctum')->group(function () {
     // SMS Campaigns
     Route::apiResource('sms-campaigns', SMSCampaignController::class);
 
-    // Protected Order Routes (index, update, destroy)
-    Route::get('/orders', [OrderController::class, 'index']);
-    // Route::get('/orders/{id}', [OrderController::class, 'show']); // Moved to public
-    Route::put('/orders/{id}', [OrderController::class, 'update']);
-    Route::delete('/orders/{id}', [OrderController::class, 'destroy']);
+    // Protected Order Routes (index, update, destroy) - Removed from here
+    // Route::get('/orders', [OrderController::class, 'index']); // Moved to public
+    // Route::put('/orders/{id}', [OrderController::class, 'update']); // Moved to public
+    // Route::delete('/orders/{id}', [OrderController::class, 'destroy']); // Moved to public
 });
 
-// Public Order Routes (Guest Checkout)
+// Public Order Routes (Guest Checkout & Admin View for now)
 Route::post('/orders', [OrderController::class, 'store']);
 Route::get('/orders/{id}', [OrderController::class, 'show']);
+Route::get('/orders', [OrderController::class, 'index']);
+Route::put('/orders/{id}', [OrderController::class, 'update']);
+Route::delete('/orders/{id}', [OrderController::class, 'destroy']);

@@ -18,32 +18,38 @@ export default function AdminOrdersPage() {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      let url = '/api/orders';
-      if (filterStatus !== 'all') {
-        url += `?status=${filterStatus}`;
-      }
-      
+      // Laravel API Endpoint
+      let url = `${process.env.NEXT_PUBLIC_API_URL}/orders`;
+
       const res = await fetch(url);
       const data = await res.json();
-      
-      if (data.success) {
-        const formattedOrders = data.data.map(order => ({
-          id: order._id,
-          customer: order.customerInfo?.name || 'Unknown',
-          date: order.createdAt,
-          amount: `৳${order.totalAmount}`,
+
+      // Laravel returns raw array
+      if (Array.isArray(data)) {
+        let formattedOrders = data.map(order => ({
+          id: order.order_number || `ORD-${order.id}`,
+          customer: order.user?.name || order.delivery_address?.name || 'Guest',
+          date: order.created_at,
+          amount: `৳${order.final_amount || order.total_amount}`,
           status: order.status
         }));
+
+        // Client-side status filtering (since backend doesn't filter yet)
+        if (filterStatus !== 'all') {
+          formattedOrders = formattedOrders.filter(o => o.status.toLowerCase() === filterStatus.toLowerCase());
+        }
+
         setOrders(formattedOrders);
       }
     } catch (error) {
+      console.error('Fetch error:', error);
       toast.error('Failed to fetch orders');
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredOrders = orders.filter(o => 
+  const filteredOrders = orders.filter(o =>
     o.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
     o.customer.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -54,7 +60,7 @@ export default function AdminOrdersPage() {
         <h1 className="text-3xl font-bold text-gray-800">Order Management</h1>
         <div className="flex items-center gap-2">
           <FiFilter className="text-gray-400" />
-          <select 
+          <select
             className="border rounded-lg px-3 py-2 bg-white outline-none focus:ring-2 focus:ring-blue-500"
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
