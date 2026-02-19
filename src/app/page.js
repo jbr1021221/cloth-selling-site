@@ -5,14 +5,14 @@ import { FiTruck, FiShield, FiCreditCard, FiHeadphones } from 'react-icons/fi';
 
 async function getProducts() {
   try {
-    const res = await fetch(`${process.env.NEXTAUTH_URL}/api/products`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products`, {
       cache: 'no-store',
     });
-    
+
     if (!res.ok) return { data: [] };
-    
+
     const result = await res.json();
-    return result;
+    return { data: result };
   } catch (error) {
     console.error('Error fetching products:', error);
     return { data: [] };
@@ -53,7 +53,7 @@ export default async function Home() {
             </div>
           </div>
         </div>
-        
+
         {/* Decorative Elements */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -mr-32 -mt-32"></div>
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-white opacity-5 rounded-full -ml-48 -mb-48"></div>
@@ -105,12 +105,12 @@ export default async function Home() {
             Handpicked items just for you
           </p>
         </div>
-        
+
         {featuredProducts.length > 0 ? (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
               {featuredProducts.map((product) => (
-                <ProductCard key={product._id} product={product} />
+                <ProductCard key={product._id || product.id} product={product} />
               ))}
             </div>
             <div className="text-center">
@@ -152,46 +152,46 @@ export default async function Home() {
               Find exactly what you're looking for across our diverse collections
             </p>
           </div>
-          
+
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
             {[
-              { 
-                name: 'Shirt', 
+              {
+                name: 'Shirt',
                 link: '/products?category=Shirt',
                 image: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?q=80&w=500&auto=format&fit=crop'
               },
-              { 
-                name: 'T-Shirt', 
+              {
+                name: 'T-Shirt',
                 link: '/products?category=T-Shirt',
                 image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=500&auto=format&fit=crop'
               },
-              { 
-                name: 'Pant', 
+              {
+                name: 'Pant',
                 link: '/products?category=Pant',
                 image: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?q=80&w=500&auto=format&fit=crop'
               },
-              { 
-                name: 'Saree', 
+              {
+                name: 'Saree',
                 link: '/products?category=Saree',
                 image: 'https://images.unsplash.com/photo-1610030464440-a88b4202c282?q=80&w=500&auto=format&fit=crop'
               },
-              { 
-                name: 'Jeans', 
+              {
+                name: 'Jeans',
                 link: '/products?category=Jeans',
                 image: 'https://images.unsplash.com/photo-1542272604-787c3835535d?q=80&w=500&auto=format&fit=crop'
               },
-              { 
-                name: 'Kurti', 
+              {
+                name: 'Kurti',
                 link: '/products?category=Kurti',
                 image: 'https://images.unsplash.com/photo-1620601815142-b83d8ca237bd?q=80&w=500&auto=format&fit=crop'
               },
-              { 
-                name: 'Salwar', 
+              {
+                name: 'Salwar',
                 link: '/products?category=Salwar',
                 image: 'https://images.unsplash.com/photo-1617173944883-6ffbd35d584d?q=80&w=500&auto=format&fit=crop'
               },
-              { 
-                name: 'Others', 
+              {
+                name: 'Others',
                 link: '/products?category=Others',
                 image: 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?q=80&w=500&auto=format&fit=crop'
               },
@@ -202,7 +202,7 @@ export default async function Home() {
                 className="group bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden"
               >
                 <div className="relative h-64 w-full overflow-hidden">
-                  <Image 
+                  <Image
                     src={category.image}
                     alt={category.name}
                     fill
@@ -222,7 +222,7 @@ export default async function Home() {
             ))}
           </div>
         </div>
-        
+
         {/* Purple/Pink Gradient Bar */}
         <div className="w-full h-24 bg-gradient-to-r from-purple-600 via-fuchsia-500 to-pink-500 mt-12 opacity-90"></div>
       </section>

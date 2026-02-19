@@ -5,11 +5,12 @@ const useCartStore = create(
   persist(
     (set, get) => ({
       items: [],
-      
+
       addItem: (product, quantity = 1, size, color) => {
         const items = get().items;
+        const productId = product.id || product._id;
         const existingItemIndex = items.findIndex(
-          item => item.id === product._id && item.size === size && item.color === color
+          item => item.id === productId && item.size === size && item.color === color
         );
 
         if (existingItemIndex > -1) {
@@ -21,10 +22,10 @@ const useCartStore = create(
             items: [
               ...items,
               {
-                id: product._id,
+                id: productId,
                 name: product.name,
-                price: product.discountPrice || product.price,
-                image: product.images[0],
+                price: product.discountPrice || product.discount_price || product.price,
+                image: product.images?.[0] || product.image,
                 quantity,
                 size,
                 color,

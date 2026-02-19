@@ -29,9 +29,9 @@ export default function OrderDetailPage({ params }) {
     try {
       const res = await fetch(`/api/orders/${params.id}`);
       const data = await res.json();
-      
-      if (data.success) {
-        setOrder(data.data);
+
+      if (res.ok) {
+        setOrder(data);
       } else {
         router.push('/orders');
       }
@@ -62,7 +62,8 @@ export default function OrderDetailPage({ params }) {
     );
   }
 
-  const currentStepIndex = statusSteps.indexOf(order.status);
+  // Helper to safely access delivery address
+  const address = order.delivery_address || {};
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -74,10 +75,10 @@ export default function OrderDetailPage({ params }) {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-3xl font-bold mb-2">
-              Order #{order._id.slice(-8).toUpperCase()}
+              Order #{order.order_number || (order.id ? `ORD-${order.id}` : 'N/A')}
             </h1>
             <p className="text-gray-600">
-              Placed on {new Date(order.createdAt).toLocaleDateString('en-US', {
+              Placed on {new Date(order.created_at || order.createdAt).toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
@@ -86,39 +87,11 @@ export default function OrderDetailPage({ params }) {
               })}
             </p>
           </div>
-          <span className={`px-4 py-2 rounded-lg font-semibold border-2 mt-4 md:mt-0 ${statusColors[order.status]}`}>
-            {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+          <span className={`px-4 py-2 rounded-lg font-semibold border-2 mt-4 md:mt-0 ${statusColors[order.status.toLowerCase()] || 'bg-gray-100'}`}>
+            {order.status}
           </span>
         </div>
       </div>
-
-      {/* Order Progress */}
-      {order.status !== 'cancelled' && (
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-6">Order Progress</h2>
-          <div className="flex justify-between items-center">
-            {statusSteps.map((step, index) => (
-              <div key={step} className="flex-1 flex flex-col items-center">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${
-                  index <= currentStepIndex ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'
-                }`}>
-                  {index + 1}
-                </div>
-                <p className={`text-sm mt-2 capitalize ${
-                  index <= currentStepIndex ? 'text-blue-600 font-semibold' : 'text-gray-500'
-                }`}>
-                  {step}
-                </p>
-                {index < statusSteps.length - 1 && (
-                  <div className={`h-1 w-full mt-5 -ml-full ${
-                    index < currentStepIndex ? 'bg-blue-600' : 'bg-gray-200'
-                  }`} />
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Order Items */}
@@ -133,15 +106,15 @@ export default function OrderDetailPage({ params }) {
                 <div key={index} className="flex gap-4 pb-4 border-b last:border-b-0">
                   <div className="relative w-20 h-20 flex-shrink-0 rounded overflow-hidden bg-gray-100">
                     <Image
-                      src={item.product?.images?.[0] || '/placeholder.jpg'}
-                      alt={item.product?.name || 'Product'}
+                      src={item.image || '/placeholder.jpg'}
+                      alt={item.name}
                       fill
                       className="object-cover"
                     />
                   </div>
                   <div className="flex-1">
                     <h3 className="font-semibold mb-1">
-                      {item.product?.name || 'Product'}
+                      {item.name}
                     </h3>
                     <p className="text-sm text-gray-500">
                       Size: {item.size} | Color: {item.color}
@@ -166,15 +139,15 @@ export default function OrderDetailPage({ params }) {
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <FiUser className="text-gray-400" />
-                <span>{order.customerInfo?.name || 'N/A'}</span>
+                <span>{address.name || order.user?.name || 'N/A'}</span>
               </div>
               <div className="flex items-center gap-2">
                 <FiMail className="text-gray-400" />
-                <span>{order.customerInfo?.email || 'N/A'}</span>
+                <span>{address.email || order.user?.email || 'N/A'}</span>
               </div>
               <div className="flex items-center gap-2">
                 <FiPhone className="text-gray-400" />
-                <span>{order.customerInfo?.phone || 'N/A'}</span>
+                <span>{address.phone || 'N/A'}</span>
               </div>
             </div>
           </div>
@@ -189,9 +162,9 @@ export default function OrderDetailPage({ params }) {
               Shipping Address
             </h2>
             <p className="text-gray-700 leading-relaxed">
-              {order.shippingAddress?.street}<br />
-              {order.shippingAddress?.city}, {order.shippingAddress?.state}<br />
-              {order.shippingAddress?.zip && `${order.shippingAddress.zip}`}
+              {address.street}<br />
+              {address.city}, {address.state}<br />
+              {address.zip}
             </p>
           </div>
 
@@ -202,12 +175,11 @@ export default function OrderDetailPage({ params }) {
               Payment Method
             </h2>
             <p className="text-gray-700 capitalize">
-              {order.paymentMethod?.replace('_', ' ')}
+              {order.payment_method?.replace(/_/g, ' ') || order.paymentMethod}
             </p>
-            <p className={`text-sm mt-2 font-semibold ${
-              order.paymentStatus === 'paid' ? 'text-green-600' : 'text-yellow-600'
-            }`}>
-              {order.paymentStatus === 'paid' ? 'Paid' : 'Pending Payment'}
+            <p className={`text-sm mt-2 font-semibold ${(order.payment_status || order.paymentStatus) === 'Paid' ? 'text-green-600' : 'text-yellow-600'
+              }`}>
+              {order.payment_status || order.paymentStatus || 'Pending'}
             </p>
           </div>
 
@@ -217,15 +189,15 @@ export default function OrderDetailPage({ params }) {
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-gray-600">Subtotal</span>
-                <span className="font-semibold">৳{order.totalAmount}</span>
+                <span className="font-semibold">৳{order.total_amount || order.totalAmount}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Shipping</span>
-                <span className="font-semibold">Included</span>
+                <span className="font-semibold">৳{order.shipping_charge || order.shippingCharge || 0}</span>
               </div>
               <div className="border-t pt-2 flex justify-between text-lg font-bold">
                 <span>Total</span>
-                <span className="text-blue-600">৳{order.totalAmount}</span>
+                <span className="text-blue-600">৳{order.final_amount || order.finalAmount}</span>
               </div>
             </div>
           </div>

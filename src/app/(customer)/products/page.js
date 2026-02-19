@@ -3,23 +3,23 @@ import ProductGrid from '@/components/products/ProductGrid';
 async function getProducts(searchParams) {
   try {
     const params = new URLSearchParams();
-    
+
     if (searchParams.category) {
       params.append('category', searchParams.category);
     }
-    
+
     if (searchParams.search) {
       params.append('search', searchParams.search);
     }
-    
-    const res = await fetch(`${process.env.NEXTAUTH_URL}/api/products?${params}`, {
+
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products?${params}`, {
       cache: 'no-store',
     });
-    
+
     if (!res.ok) return { data: [] };
-    
+
     const result = await res.json();
-    return result;
+    return { data: result };
   } catch (error) {
     console.error('Error:', error);
     return { data: [] };

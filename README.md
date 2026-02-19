@@ -14,6 +14,22 @@ pnpm dev
 bun dev
 ```
 
+### Running the Backend (Laravel API)
+
+This project also includes a Laravel API backend. To run it:
+
+1. Navigate to the `backend` directory:
+   ```bash
+   cd backend
+   ```
+2. Start the Laravel development server:
+   ```bash
+   php artisan serve
+   ```
+   The API will be available at `http://localhost:8000`.
+
+Make sure to run both the frontend and backend servers simultaneously.
+
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.

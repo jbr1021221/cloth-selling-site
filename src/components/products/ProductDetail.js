@@ -13,7 +13,7 @@ export default function ProductDetail({ product, relatedProducts }) {
   const [selectedSize, setSelectedSize] = useState(product.sizes?.[0] || '');
   const [selectedColor, setSelectedColor] = useState(product.colors?.[0] || '');
   const [quantity, setQuantity] = useState(1);
-  
+
   const addItem = useCartStore((state) => state.addItem);
 
   const handleAddToCart = () => {
@@ -21,15 +21,16 @@ export default function ProductDetail({ product, relatedProducts }) {
       toast.error('Please select size and color');
       return;
     }
-    
+
     addItem(product, quantity, selectedSize, selectedColor);
     toast.success('Added to cart!');
   };
 
-  const displayPrice = product.discountPrice || product.price;
-  const hasDiscount = product.discountPrice && product.discountPrice < product.price;
-  const discountPercent = hasDiscount 
-    ? Math.round(((product.price - product.discountPrice) / product.price) * 100)
+  const discountPrice = product.discountPrice || product.discount_price;
+  const displayPrice = discountPrice || product.price;
+  const hasDiscount = discountPrice && discountPrice < product.price;
+  const discountPercent = hasDiscount
+    ? Math.round(((product.price - discountPrice) / product.price) * 100)
     : 0;
 
   return (
@@ -59,9 +60,8 @@ export default function ProductDetail({ product, relatedProducts }) {
                 <button
                   key={index}
                   onClick={() => setSelectedImage(index)}
-                  className={`relative h-20 rounded overflow-hidden border-2 ${
-                    selectedImage === index ? 'border-blue-600' : 'border-gray-200'
-                  }`}
+                  className={`relative h-20 rounded overflow-hidden border-2 ${selectedImage === index ? 'border-blue-600' : 'border-gray-200'
+                    }`}
                 >
                   <Image
                     src={image}
@@ -78,7 +78,7 @@ export default function ProductDetail({ product, relatedProducts }) {
         {/* Product Info Section */}
         <div>
           <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
-          
+
           <div className="flex items-center gap-2 mb-4">
             <span className="text-sm text-gray-500">{product.category}</span>
             {product.stock > 0 ? (
@@ -95,7 +95,7 @@ export default function ProductDetail({ product, relatedProducts }) {
               <>
                 <span className="text-2xl text-gray-400 line-through">৳{product.price}</span>
                 <span className="bg-red-100 text-red-600 px-2 py-1 rounded text-sm font-semibold">
-                  Save ৳{product.price - product.discountPrice}
+                  Save ৳{product.price - discountPrice}
                 </span>
               </>
             )}
@@ -116,11 +116,10 @@ export default function ProductDetail({ product, relatedProducts }) {
                   <button
                     key={size}
                     onClick={() => setSelectedSize(size)}
-                    className={`px-4 py-2 border rounded-lg font-semibold ${
-                      selectedSize === size
-                        ? 'bg-blue-600 text-white border-blue-600'
-                        : 'bg-white text-gray-700 border-gray-300 hover:border-blue-600'
-                    }`}
+                    className={`px-4 py-2 border rounded-lg font-semibold ${selectedSize === size
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : 'bg-white text-gray-700 border-gray-300 hover:border-blue-600'
+                      }`}
                   >
                     {size}
                   </button>
@@ -138,11 +137,10 @@ export default function ProductDetail({ product, relatedProducts }) {
                   <button
                     key={color}
                     onClick={() => setSelectedColor(color)}
-                    className={`px-4 py-2 border rounded-lg font-semibold capitalize ${
-                      selectedColor === color
-                        ? 'bg-blue-600 text-white border-blue-600'
-                        : 'bg-white text-gray-700 border-gray-300 hover:border-blue-600'
-                    }`}
+                    className={`px-4 py-2 border rounded-lg font-semibold capitalize ${selectedColor === color
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : 'bg-white text-gray-700 border-gray-300 hover:border-blue-600'
+                      }`}
                   >
                     {color}
                   </button>
@@ -196,7 +194,7 @@ export default function ProductDetail({ product, relatedProducts }) {
           <div className="border-t pt-6 space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-gray-600">SKU:</span>
-              <span className="font-semibold">{product._id}</span>
+              <span className="font-semibold">{product._id || product.sku || product.id}</span>
             </div>
             {product.vendor && (
               <div className="flex justify-between">
@@ -214,7 +212,7 @@ export default function ProductDetail({ product, relatedProducts }) {
           <h2 className="text-2xl font-bold mb-6">Related Products</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {relatedProducts.map((relatedProduct) => (
-              <ProductCard key={relatedProduct._id} product={relatedProduct} />
+              <ProductCard key={relatedProduct._id || relatedProduct.id} product={relatedProduct} />
             ))}
           </div>
         </div>

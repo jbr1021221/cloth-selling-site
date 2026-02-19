@@ -11,45 +11,45 @@ export default function ProductGrid({ products }) {
   const handleSort = (value) => {
     setSortBy(value);
     let sorted = [...filteredProducts];
-    
+
     switch (value) {
       case 'price-low':
-        sorted.sort((a, b) => (a.discountPrice || a.price) - (b.discountPrice || b.price));
+        sorted.sort((a, b) => ((a.discountPrice || a.discount_price || a.price) - (b.discountPrice || b.discount_price || b.price)));
         break;
       case 'price-high':
-        sorted.sort((a, b) => (b.discountPrice || b.price) - (a.discountPrice || a.price));
+        sorted.sort((a, b) => ((b.discountPrice || b.discount_price || b.price) - (a.discountPrice || a.discount_price || a.price)));
         break;
       case 'newest':
-        sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        sorted.sort((a, b) => new Date(b.createdAt || b.created_at) - new Date(a.createdAt || a.created_at));
         break;
       default:
         break;
     }
-    
+
     setFilteredProducts(sorted);
   };
 
   const handleFilter = (filters) => {
     let filtered = [...products];
-    
+
     // Filter by category
     if (filters.category && filters.category !== 'all') {
       filtered = filtered.filter(p => p.category === filters.category);
     }
-    
+
     // Filter by price range
     if (filters.minPrice) {
-      filtered = filtered.filter(p => (p.discountPrice || p.price) >= filters.minPrice);
+      filtered = filtered.filter(p => (p.discountPrice || p.discount_price || p.price) >= filters.minPrice);
     }
     if (filters.maxPrice) {
-      filtered = filtered.filter(p => (p.discountPrice || p.price) <= filters.maxPrice);
+      filtered = filtered.filter(p => (p.discountPrice || p.discount_price || p.price) <= filters.maxPrice);
     }
-    
+
     // Filter by size
     if (filters.size) {
       filtered = filtered.filter(p => p.sizes.includes(filters.size));
     }
-    
+
     setFilteredProducts(filtered);
   };
 
@@ -67,7 +67,7 @@ export default function ProductGrid({ products }) {
           <p className="text-gray-600">
             {filteredProducts.length} Products
           </p>
-          
+
           <select
             value={sortBy}
             onChange={(e) => handleSort(e.target.value)}
@@ -83,7 +83,7 @@ export default function ProductGrid({ products }) {
         {filteredProducts.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProducts.map((product) => (
-              <ProductCard key={product._id} product={product} />
+              <ProductCard key={product._id || product.id} product={product} />
             ))}
           </div>
         ) : (
