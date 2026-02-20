@@ -1,0 +1,48 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+    html { scroll-behavior: smooth; }
+    body { @apply bg-gray-950 text-gray-100 font-sans; }
+}
+
+@layer components {
+    .btn-primary {
+        @apply bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 hover:-translate-y-0.5 active:translate-y-0;
+    }
+    .btn-outline {
+        @apply border border-gray-600 hover:border-indigo-500 text-gray-300 hover:text-indigo-400 font-semibold px-5 py-2.5 rounded-xl transition-all duration-200;
+    }
+    .btn-danger {
+        @apply bg-red-600 hover:bg-red-500 text-white font-semibold px-4 py-2 rounded-xl transition-all duration-200;
+    }
+    .card {
+        @apply bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden shadow-xl hover:border-indigo-500/40 transition-all duration-300;
+    }
+    .input {
+        @apply w-full bg-gray-800 border border-gray-700 text-gray-100 placeholder-gray-500 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200;
+    }
+    .label {
+        @apply block text-sm font-medium text-gray-400 mb-1.5;
+    }
+    .badge {
+        @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold;
+    }
+    .navbar-link {
+        @apply text-gray-400 hover:text-indigo-400 font-medium transition-colors duration-200;
+    }
+    .table-head {
+        @apply text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-3 bg-gray-800/50;
+    }
+    .table-cell {
+        @apply px-4 py-4 text-sm text-gray-300 border-t border-gray-800;
+    }
+}
