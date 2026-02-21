@@ -45,7 +45,11 @@ class ProductController extends Controller
 
     public function show($id)
     {
-        $product = Product::where('is_active', true)->findOrFail($id);
+        if (request()->has('ref') && request('ref') !== (string)auth()->id()) {
+            session(['referred_by' => request('ref')]);
+        }
+
+        $product = Product::with(['variants', 'activeFlashSale'])->where('is_active', true)->findOrFail($id);
 
         $relatedProducts = Product::where('category', $product->category)
             ->where('id', '!=', $product->id)
@@ -57,8 +61,8 @@ class ProductController extends Controller
         $reviews    = $product->reviews()->with('user')->get();
         $avgRating  = $reviews->avg('rating') ?? 0;
         $ratingCount = $reviews->count();
-        $userReview = auth()->check()
-            ? $reviews->firstWhere('user_id', auth()->id())
+        $userReview = \Illuminate\Support\Facades\Auth::check()
+            ? $reviews->firstWhere('user_id', \Illuminate\Support\Facades\Auth::id())
             : null;
 
         return view('products.show', compact('product', 'relatedProducts', 'reviews', 'avgRating', 'ratingCount', 'userReview'));
@@ -94,11 +98,9 @@ class ProductController extends Controller
                 'id'          => $p->id,
                 'name'        => $p->name,
                 'category'    => $p->category,
-                'price'       => ($p->discount_price && $p->discount_price < $p->price)
-                                     ? $p->discount_price
-                                     : $p->price,
+                'price'       => $p->getCurrentPrice(),
                 'original'    => $p->price,
-                'has_discount'=> $p->discount_price && $p->discount_price < $p->price,
+                'has_discount'=> $p->getHasDiscount(),
                 'image'       => is_array($p->images) && count($p->images) > 0
                                      ? $p->images[0]
                                      : $fallbackImage,

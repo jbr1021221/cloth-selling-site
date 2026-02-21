@@ -25,7 +25,7 @@
                 <div class="border border-gray-100 p-4 sm:p-5 flex gap-5 hover:border-[#C9A84C] transition-colors duration-300 bg-white">
 
                     {{-- Product image --}}
-                    <a href="{{ route('products.show', $item['id']) }}" class="flex-shrink-0 bg-[#F8F8F8]">
+                    <a href="{{ route('products.show', $item['product_id']) }}" class="flex-shrink-0 bg-[#F8F8F8]">
                         <img src="{{ $item['image'] }}" alt="{{ $item['name'] }}" class="w-24 h-32 sm:w-28 sm:h-36 object-cover border border-gray-100">
                     </a>
 
@@ -34,7 +34,7 @@
                         <div>
                             <div class="flex justify-between items-start gap-4 mb-1">
                                 <h3 class="font-bold text-[#1A1A1A] text-sm sm:text-base tracking-wide uppercase truncate">
-                                    <a href="{{ route('products.show', $item['id']) }}" class="hover:text-[#C9A84C] transition-colors">{{ $item['name'] }}</a>
+                                    <a href="{{ route('products.show', $item['product_id']) }}" class="hover:text-[#C9A84C] transition-colors">{{ $item['name'] }}</a>
                                 </h3>
                                 {{-- Remove --}}
                                 <form method="POST" action="{{ route('cart.remove') }}">

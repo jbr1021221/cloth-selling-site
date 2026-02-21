@@ -23,8 +23,8 @@ class SmsService
 
     public function __construct()
     {
-        $this->apiKey   = config('services.alpha_sms.api_key', '');
-        $this->senderId = config('services.alpha_sms.sender_id', 'ClothStore');
+        $this->apiKey   = \App\Models\Setting::get('alpha_sms_api_key', config('services.alpha_sms.api_key', ''));
+        $this->senderId = \App\Models\Setting::get('sms_sender_id', config('services.alpha_sms.sender_id', 'ClothStore'));
         $this->baseUrl  = config('services.alpha_sms.base_url', 'https://alphasms.com.bd/api/v1/send');
     }
 

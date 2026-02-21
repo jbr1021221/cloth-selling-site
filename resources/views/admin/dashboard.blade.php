@@ -1,97 +1,122 @@
 @extends('layouts.admin')
 
 @section('title', 'Dashboard')
-@section('page-title', 'Dashboard')
+@section('page-title', 'Overview')
 
 @section('content')
+
 {{-- Stats Cards --}}
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+<div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-10">
     @php
         $stats = [
-            ['label' => 'Total Orders',    'value' => $totalOrders,    'icon' => '📦', 'color' => 'indigo', 'link' => route('admin.orders')],
-            ['label' => 'Total Revenue',   'value' => '৳' . number_format($totalRevenue), 'icon' => '💰', 'color' => 'emerald', 'link' => route('admin.orders')],
-            ['label' => 'Total Products',  'value' => $totalProducts,  'icon' => '👔', 'color' => 'purple', 'link' => route('admin.products')],
-            ['label' => 'Total Customers', 'value' => $totalCustomers, 'icon' => '👤', 'color' => 'blue',   'link' => route('admin.users')],
-            ['label' => 'Active Coupons',  'value' => \App\Models\Coupon::where('is_active', true)->count(), 'icon' => '🎟️', 'color' => 'amber', 'link' => route('admin.coupons.index')],
+            ['label' => 'Total Orders',    'value' => $totalOrders,    'icon' => '📦', 'link' => route('admin.orders')],
+            ['label' => 'Total Revenue',   'value' => '৳' . number_format($totalRevenue), 'icon' => '💰', 'link' => route('admin.orders')],
+            ['label' => 'Total Products',  'value' => $totalProducts,  'icon' => '👔', 'link' => route('admin.products')],
+            ['label' => 'Total Customers', 'value' => $totalCustomers, 'icon' => '👤', 'link' => route('admin.users')],
+            ['label' => 'Points Issued',   'value' => number_format($totalPointsIssued), 'icon' => '⭐', 'link' => route('admin.loyalty.index')],
+            ['label' => 'Points Redeemed', 'value' => number_format($totalPointsRedeemed), 'icon' => '🎫', 'link' => route('admin.loyalty.index')],
         ];
     @endphp
+    
     @foreach($stats as $stat)
-        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5 hover:border-indigo-500/30 transition-colors">
-            <div class="flex items-center justify-between mb-3">
-                <span class="text-2xl">{{ $stat['icon'] }}</span>
+        <a href="{{ $stat['link'] }}" class="bg-white border border-gray-100 p-6 flex flex-col hover:border-[#C9A84C] transition-colors shadow-sm group">
+            <div class="flex justify-between items-start mb-4">
+                <span class="text-[10px] font-bold uppercase tracking-widest text-gray-400 group-hover:text-[#1A1A1A] transition-colors">{{ $stat['label'] }}</span>
+                <span class="text-[#C9A84C] text-xl grayscale group-hover:grayscale-0 transition-all">{{ $stat['icon'] }}</span>
             </div>
-            <p class="text-2xl font-bold text-white mb-1">{{ $stat['value'] }}</p>
-            <p class="text-sm text-gray-500">{{ $stat['label'] }}</p>
-        </div>
+            <p class="text-3xl font-bold text-[#1A1A1A] mt-auto">{{ $stat['value'] }}</p>
+        </a>
     @endforeach
 </div>
 
-<div class="grid lg:grid-cols-2 gap-6">
-    {{-- Recent Orders --}}
-    <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-        <div class="flex items-center justify-between p-5 border-b border-gray-800">
-            <h2 class="font-semibold text-white">Recent Orders</h2>
-            <a href="{{ route('admin.orders') }}" class="text-sm text-indigo-400 hover:underline">View All</a>
+
+<div class="grid lg:grid-cols-3 gap-8">
+    
+    {{-- Recent Orders Table --}}
+    <div class="lg:col-span-2 bg-white border border-gray-100 shadow-sm flex flex-col">
+        <div class="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+            <h2 class="text-xs font-bold uppercase tracking-widest text-[#1A1A1A]">Recent Orders</h2>
+            <a href="{{ route('admin.orders') }}" class="text-[10px] font-bold uppercase tracking-widest text-[#C9A84C] hover:text-[#1A1A1A] transition-colors">View All &rarr;</a>
         </div>
+        
         <div class="overflow-x-auto">
-            <table class="w-full">
+            <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr>
-                        <th class="table-head">Order</th>
-                        <th class="table-head">Amount</th>
-                        <th class="table-head">Status</th>
+                    <tr class="bg-[#F8F8F8] border-b border-gray-100">
+                        <th class="py-3 px-6 text-[10px] font-bold uppercase tracking-widest text-gray-500">Order</th>
+                        <th class="py-3 px-6 text-[10px] font-bold uppercase tracking-widest text-gray-500">Date</th>
+                        <th class="py-3 px-6 text-[10px] font-bold uppercase tracking-widest text-gray-500">Amount</th>
+                        <th class="py-3 px-6 text-[10px] font-bold uppercase tracking-widest text-gray-500">Status</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="divide-y divide-gray-100">
                     @forelse($recentOrders as $order)
-                        <tr class="hover:bg-gray-800/50 transition-colors">
-                            <td class="table-cell">
-                                <a href="{{ route('admin.orders.show', $order->id) }}" class="font-mono text-indigo-400 hover:underline">#{{ $order->order_number }}</a>
-                                <p class="text-xs text-gray-600">{{ $order->created_at->diffForHumans() }}</p>
+                        <tr class="hover:bg-[#FFF9EC] transition-colors">
+                            <td class="py-4 px-6">
+                                <a href="{{ route('admin.orders.show', $order->id) }}" class="text-sm font-bold text-[#1A1A1A] hover:text-[#C9A84C] transition-colors">
+                                    #{{ $order->order_number }}
+                                </a>
                             </td>
-                            <td class="table-cell font-semibold text-white">৳{{ number_format($order->final_amount) }}</td>
-                            <td class="table-cell">
-                                @php
-                                    $c = ['pending'=>'yellow','processing'=>'blue','shipped'=>'purple','delivered'=>'emerald','cancelled'=>'red'];
-                                    $col = $c[$order->status] ?? 'gray';
-                                @endphp
-                                <span class="badge bg-{{ $col }}-500/20 text-{{ $col }}-400 border border-{{ $col }}-500/30">{{ ucfirst($order->status) }}</span>
+                            <td class="py-4 px-6 text-xs text-gray-500 truncate">
+                                {{ $order->created_at->format('M d, Y') }}
+                            </td>
+                            <td class="py-4 px-6 text-sm font-bold text-[#1A1A1A]">
+                                ৳{{ number_format($order->final_amount) }}
+                            </td>
+                            <td class="py-4 px-6">
+                                <span class="inline-flex items-center px-2 py-1 border border-[#C9A84C]/20 bg-[#C9A84C]/10 text-[#C9A84C] text-[9px] font-bold uppercase tracking-widest">
+                                    {{ $order->status }}
+                                </span>
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="3" class="table-cell text-center text-gray-600 py-8">No orders yet</td></tr>
+                        <tr>
+                            <td colspan="4" class="py-10 text-center text-xs text-gray-500 uppercase tracking-widest">No recent orders</td>
+                        </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
     </div>
 
-    {{-- Top Products --}}
-    <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-        <div class="flex items-center justify-between p-5 border-b border-gray-800">
-            <h2 class="font-semibold text-white">Top Products</h2>
-            <a href="{{ route('admin.products') }}" class="text-sm text-indigo-400 hover:underline">View All</a>
+
+    {{-- Top Products List --}}
+    <div class="bg-white border border-gray-100 shadow-sm flex flex-col">
+        <div class="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+            <h2 class="text-xs font-bold uppercase tracking-widest text-[#1A1A1A]">Top Products</h2>
+            <a href="{{ route('admin.products') }}" class="text-[10px] font-bold uppercase tracking-widest text-[#C9A84C] hover:text-[#1A1A1A] transition-colors">View All</a>
         </div>
-        <div class="p-5 space-y-4">
+        
+        <div class="p-6 space-y-6">
             @forelse($topProducts as $product)
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 bg-gray-800 rounded-xl overflow-hidden flex-shrink-0">
+                <div class="flex items-center gap-4 group">
+                    <div class="w-16 h-20 bg-[#F8F8F8] border border-gray-100 shrink-0 group-hover:border-[#C9A84C] transition-colors">
                         @if(is_array($product->images) && count($product->images) > 0)
                             <img src="{{ $product->images[0] }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
                         @else
-                            <div class="w-full h-full flex items-center justify-center text-xl">👔</div>
+                            <div class="w-full h-full flex items-center justify-center text-gray-400 text-xs">NO IMG</div>
                         @endif
                     </div>
+                    
                     <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium text-white truncate">{{ $product->name }}</p>
-                        <p class="text-xs text-gray-500">{{ $product->category }} • Stock: {{ $product->stock }}</p>
+                        <a href="{{ route('admin.products.edit', $product->id) }}" class="block">
+                            <h3 class="text-xs font-bold uppercase tracking-widest text-[#1A1A1A] line-clamp-1 group-hover:text-[#C9A84C] transition-colors">{{ $product->name }}</h3>
+                        </a>
+                        <p class="text-[9px] font-bold uppercase tracking-widest text-gray-400 mt-1 mb-2">{{ $product->category }}</p>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-bold text-[#1A1A1A]">৳{{ number_format($product->price) }}</span>
+                            <span class="text-[9px] font-bold uppercase tracking-widest {{ $product->stock > 0 ? 'text-green-600' : 'text-red-500' }}">
+                                Stock: {{ $product->stock }}
+                            </span>
+                        </div>
                     </div>
-                    <p class="text-sm font-bold text-indigo-400 flex-shrink-0">৳{{ number_format($product->price) }}</p>
                 </div>
             @empty
-                <p class="text-gray-600 text-sm text-center py-8">No products yet</p>
+                <div class="py-10 text-center text-xs text-gray-500 uppercase tracking-widest">No products available</div>
             @endforelse
         </div>
     </div>
+
 </div>
+
 @endsection

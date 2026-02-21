@@ -4,11 +4,60 @@
 @section('content')
 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
+    {{-- VIP Profile Header --}}
+    <div class="bg-white border border-[#C9A84C]/30 shadow-sm p-6 sm:p-8 mb-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div class="flex items-center gap-6">
+            <div class="w-16 h-16 rounded-full bg-[#1A1A1A] text-[#C9A84C] flex items-center justify-center text-3xl shadow-inner border border-[#C9A84C]">
+                @if(auth()->user()->tier === 'diamond') 💎 @elseif(auth()->user()->tier === 'gold') 🥇 @else 🥉 @endif
+            </div>
+            <div>
+                <h2 class="text-2xl playfair font-bold text-[#1A1A1A] uppercase tracking-widest">{{ auth()->user()->name }}</h2>
+                <div class="flex items-center gap-3 mt-1">
+                    <span class="text-xs uppercase tracking-widest font-bold text-[#C9A84C] flex items-center gap-1">
+                        👑 {{ ucfirst(auth()->user()->tier) }} Member
+                    </span>
+                    <span class="text-xs text-gray-400">|</span>
+                    <span class="text-xs text-gray-500 uppercase tracking-widest">Spent: ৳{{ number_format(auth()->user()->total_spent) }}</span>
+                </div>
+            </div>
+        </div>
+        
+        @php
+            $next = auth()->user()->nextTierRequirement();
+        @endphp
+        
+        @if($next)
+        <div class="w-full sm:w-1/3">
+            <div class="flex justify-between text-[10px] font-bold uppercase tracking-widest mb-2">
+                <span class="text-gray-400">Current: {{ auth()->user()->tier }}</span>
+                <span class="text-[#C9A84C]">Next: {{ $next['next_tier'] }}</span>
+            </div>
+            <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                @php
+                    $target = $next['next_tier'] === 'diamond' ? 20000 : 5000;
+                    $current = auth()->user()->total_spent;
+                    $pct = min(100, ($current / $target) * 100);
+                @endphp
+                <div class="h-full bg-[#C9A84C]" style="width: {{ $pct }}%"></div>
+            </div>
+            <p class="text-[10px] text-gray-400 uppercase tracking-widest text-right mt-2">
+                Spend <strong class="text-[#1A1A1A]">৳{{ number_format($next['remaining']) }}</strong> more to reach {{ ucfirst($next['next_tier']) }}!
+            </p>
+        </div>
+        @else
+        <div class="w-full sm:w-1/3 text-right">
+            <span class="inline-block px-4 py-2 bg-[#1A1A1A] text-[#C9A84C] text-[10px] font-bold uppercase tracking-widest border border-[#C9A84C]/30 shadow-sm">
+                Highest Tier Achieved 👑
+            </span>
+        </div>
+        @endif
+    </div>
+
     {{-- Header --}}
     <div class="flex items-center justify-between mb-8">
         <div>
-            <h1 class="text-3xl font-bold text-white">My Orders</h1>
-            <p class="text-gray-400 mt-1">
+            <h1 class="text-3xl font-bold text-[#1A1A1A] playfair uppercase tracking-widest">My Orders</h1>
+            <p class="text-gray-400 mt-1 uppercase text-xs tracking-widest font-bold">
                 @if($orders->total() > 0)
                     {{ $orders->total() }} {{ Str::plural('order', $orders->total()) }} total
                 @else
@@ -16,9 +65,8 @@
                 @endif
             </p>
         </div>
-        <a href="{{ route('products.index') }}" class="btn-outline text-sm flex items-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 16H4L5 9z"/></svg>
-            Shop
+        <a href="{{ route('products.index') }}" class="btn-primary text-xs flex items-center gap-2">
+            Continue Shopping
         </a>
     </div>
 
@@ -40,13 +88,13 @@
                 $isCancelled = $order->status === 'cancelled';
                 $pct       = $isCancelled ? 0 : ($stepIdx === false ? 0 : ($stepIdx / 3) * 100);
             @endphp
-            <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden hover:border-gray-700 transition-colors">
+            <div class="bg-white border border-gray-200 shadow-sm hover:border-[#C9A84C] transition-colors">
 
                 {{-- Top row --}}
                 <div class="px-6 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div class="flex-1 min-w-0">
                         <div class="flex flex-wrap items-center gap-2 mb-1">
-                            <span class="text-base font-bold text-white font-mono">#{{ $order->order_number }}</span>
+                            <span class="text-base font-bold text-[#1A1A1A] font-mono">#{{ $order->order_number }}</span>
                             <span class="text-lg">{{ $sc['icon'] }}</span>
                             <span class="badge border
                                 @if($c === 'amber')   bg-amber-500/20   text-amber-400   border-amber-500/30
@@ -71,7 +119,7 @@
                         </p>
                     </div>
                     <div class="flex flex-col sm:items-end gap-2 flex-shrink-0">
-                        <p class="text-2xl font-extrabold text-indigo-400">৳{{ number_format($order->final_amount) }}</p>
+                        <p class="text-2xl font-extrabold text-[#1A1A1A]">৳{{ number_format($order->final_amount) }}</p>
                         <a href="{{ route('orders.show', $order->id) }}"
                            class="btn-outline text-sm px-4 py-2 flex items-center gap-1.5">
                             Track Order

@@ -15,7 +15,7 @@ class WishlistController extends Controller
     public function index()
     {
         $wishlistItems = Wishlist::with('product')
-            ->where('user_id', auth()->id())
+            ->where('user_id', \Illuminate\Support\Facades\Auth::id())
             ->latest()
             ->get();
 
@@ -34,7 +34,7 @@ class WishlistController extends Controller
      */
     public function toggle(Product $product)
     {
-        $userId    = auth()->id();
+        $userId    = \Illuminate\Support\Facades\Auth::id();
         $existing  = Wishlist::where('user_id', $userId)
                              ->where('product_id', $product->id)
                              ->first();

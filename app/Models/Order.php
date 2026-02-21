@@ -22,6 +22,7 @@ class Order extends Model
         'status',
         'vendor_id',
         'notes',
+        'admin_notes',
     ];
 
     protected $casts = [
@@ -41,5 +42,10 @@ class Order extends Model
     public function vendor()
     {
         return $this->belongsTo(Vendor::class);
+    }
+
+    public function statusHistories()
+    {
+        return $this->hasMany(OrderStatusHistory::class)->latest();
     }
 }

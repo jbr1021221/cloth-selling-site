@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\FlashSale;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
@@ -15,6 +16,12 @@ class HomeController extends Controller
             ->take(8)
             ->get();
 
-        return view('home', compact('featuredProducts'));
+        $flashSales = FlashSale::with('product')
+            ->active()
+            ->latest('starts_at')
+            ->take(4)
+            ->get();
+
+        return view('home', compact('featuredProducts', 'flashSales'));
     }
 }

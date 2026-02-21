@@ -1,0 +1,26 @@
+mysql: [Warning] Using a password on the command line interface can be insecure.
+Tables_in_laravel
+cache
+cache_locks
+coupons
+delivery_zones
+failed_jobs
+flash_sales
+job_batches
+jobs
+loyalty_points
+migrations
+order_items
+order_status_histories
+orders
+password_reset_tokens
+personal_access_tokens
+product_variants
+products
+reviews
+sessions
+settings
+sms_campaigns
+users
+vendors
+wishlists

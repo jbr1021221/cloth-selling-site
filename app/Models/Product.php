@@ -43,5 +43,39 @@ class Product extends Model
     {
         return $this->hasMany(Review::class)->where('approved', true)->latest();
     }
+
+    public function variants()
+    {
+        return $this->hasMany(ProductVariant::class);
+    }
+
+    public function flashSales()
+    {
+        return $this->hasMany(FlashSale::class);
+    }
+
+    public function activeFlashSale()
+    {
+        return $this->hasOne(FlashSale::class)
+            ->where('is_active', true)
+            ->where('starts_at', '<=', now())
+            ->where('ends_at', '>=', now())
+            ->whereRaw('sold_count < max_quantity')
+            ->latest('starts_at');
+    }
+
+    public function getCurrentPrice()
+    {
+        if ($this->activeFlashSale) {
+            return $this->activeFlashSale->sale_price;
+        }
+
+        return $this->discount_price ?? $this->price;
+    }
+
+    public function getHasDiscount()
+    {
+        return $this->activeFlashSale || $this->discount_price;
+    }
 }
 

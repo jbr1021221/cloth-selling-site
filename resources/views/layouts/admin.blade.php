@@ -35,11 +35,13 @@
     </div>
 
     {{-- Sidebar --}}
-    {{-- Mobile: starts off-screen (-translate-x-full) and slides in when sidebarOpen = true.
-         Desktop (lg+): static, always visible in the flex row via lg:translate-x-0. --}}
-    <aside class="fixed inset-y-0 left-0 z-50 w-[280px] max-w-[280px] bg-white border-r border-gray-200 flex flex-col transition-transform duration-300
-                  lg:static lg:z-auto lg:w-64 lg:flex-shrink-0 lg:translate-x-0 -translate-x-full"
-           :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'">
+    {{-- On mobile: hidden off-screen by default (-translate-x-full via Alpine).
+         On desktop (lg+): always visible (lg:translate-x-0), part of the flex row. --}}
+    <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
+           class="fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-gray-200 flex flex-col
+                  transition-transform duration-300 ease-in-out
+                  lg:relative lg:z-auto lg:w-64 lg:flex-shrink-0 lg:translate-x-0 -translate-x-full"
+           style="">
         
         {{-- Logo Area with mobile close button --}}
         <div class="h-20 flex items-center px-6 border-b border-gray-100 flex-shrink-0">

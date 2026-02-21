@@ -3,18 +3,7 @@
 
 @section('content')
 @php
-$districts = [
-    'Dhaka Division'     => ['Dhaka','Faridpur','Gazipur','Gopalganj','Kishoreganj','Madaripur','Manikganj','Munshiganj','Narayanganj','Narsingdi','Rajbari','Shariatpur','Tangail'],
-    'Chittagong Division'=> ['Bandarban','Brahmanbaria','Chandpur','Chattogram','Cox\'s Bazar','Cumilla','Feni','Khagrachhari','Lakshmipur','Noakhali','Rangamati'],
-    'Rajshahi Division'  => ['Bogura','Chapainawabganj','Joypurhat','Naogaon','Natore','Pabna','Rajshahi','Sirajganj'],
-    'Khulna Division'    => ['Bagerhat','Chuadanga','Jashore','Jhenaidah','Khulna','Kushtia','Magura','Meherpur','Narail','Satkhira'],
-    'Barishal Division'  => ['Barguna','Barishal','Bhola','Jhalokati','Patuakhali','Pirojpur'],
-    'Sylhet Division'    => ['Habiganj','Moulvibazar','Sunamganj','Sylhet'],
-    'Rangpur Division'   => ['Dinajpur','Gaibandha','Kurigram','Lalmonirhat','Nilphamari','Panchagarh','Rangpur','Thakurgaon'],
-    'Mymensingh Division'=> ['Jamalpur','Mymensingh','Netrokona','Sherpur'],
-];
-$dhakaShipping   = 60;
-$outsideShipping = 120;
+$districts = []; // Replaced by delivery_zones from DB
 @endphp
 
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 bg-white">
@@ -37,7 +26,7 @@ $outsideShipping = 120;
     </div>
     @endif
 
-    <form method="POST" action="{{ route('checkout.place') }}" class="grid lg:grid-cols-3 gap-10 lg:gap-16" x-data="checkoutApp()" @submit="applyShipping()">
+    <form method="POST" action="{{ route('checkout.place') }}" class="grid lg:grid-cols-3 gap-10 lg:gap-16" x-data="checkoutApp()" @submit="applyShipping()" novalidate>
         @csrf
 
         {{-- ── Left: Shipping + Payment ───────────────────────────────────────── --}}
@@ -50,14 +39,14 @@ $outsideShipping = 120;
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-6">
                     <div>
                         <label class="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2 block">Full Name *</label>
-                        <input type="text" name="name" value="{{ old('name', auth()->user()->name ?? '') }}" required class="w-full border-b border-gray-300 py-2 focus:outline-none focus:border-[#C9A84C] text-[#1A1A1A] text-sm bg-transparent placeholder-gray-300" placeholder="Your full name">
+                        <input type="text" name="name" value="{{ old('name', auth()->user()->name ?? '') }}" class="w-full border-b border-gray-300 py-2 focus:outline-none focus:border-[#C9A84C] text-[#1A1A1A] text-sm bg-transparent placeholder-gray-300" placeholder="Your full name">
                     </div>
 
                     <div>
                         <label class="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2 block">Phone Number *</label>
                         <div class="relative">
                             <span class="absolute left-0 top-1/2 -translate-y-1/2 text-[#1A1A1A] text-sm font-medium">+880</span>
-                            <input type="tel" name="phone" id="phone" value="{{ old('phone', auth()->user()->phone ?? '') }}" required pattern="01[3-9]\d{8}" maxlength="11" class="w-full border-b border-gray-300 py-2 pl-12 focus:outline-none focus:border-[#C9A84C] text-[#1A1A1A] text-sm bg-transparent placeholder-gray-300" placeholder="1XXXXXXXXX" x-model="phone" @input="validatePhone()">
+                            <input type="tel" name="phone" id="phone" value="{{ old('phone', auth()->user()->phone ?? '') }}" maxlength="11" class="w-full border-b border-gray-300 py-2 pl-12 focus:outline-none focus:border-[#C9A84C] text-[#1A1A1A] text-sm bg-transparent placeholder-gray-300" placeholder="1XXXXXXXXX" x-model="phone" @input="validatePhone()">
                         </div>
                         <p class="text-[10px] mt-1 tracking-widest uppercase transition-all" x-show="phoneMsg" :class="phoneValid ? 'text-green-600' : 'text-red-500'" x-text="phoneMsg"></p>
                     </div>
@@ -69,26 +58,22 @@ $outsideShipping = 120;
 
                     <div class="sm:col-span-2">
                         <label class="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2 block">Street Address *</label>
-                        <input type="text" name="address" value="{{ old('address') }}" required class="w-full border-b border-gray-300 py-2 focus:outline-none focus:border-[#C9A84C] text-[#1A1A1A] text-sm bg-transparent placeholder-gray-300" placeholder="House No, Road, Area">
+                        <input type="text" name="address" value="{{ old('address') }}" class="w-full border-b border-gray-300 py-2 focus:outline-none focus:border-[#C9A84C] text-[#1A1A1A] text-sm bg-transparent placeholder-gray-300" placeholder="House No, Road, Area">
                     </div>
 
                     <div>
                         <label class="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2 block">District *</label>
-                        <select name="district" required class="w-full border-b border-gray-300 py-2 focus:outline-none focus:border-[#C9A84C] text-[#1A1A1A] text-sm bg-transparent cursor-pointer" x-model="district" @change="onDistrictChange()">
+                        <select name="district" class="w-full border-b border-gray-300 py-2 focus:outline-none focus:border-[#C9A84C] text-[#1A1A1A] text-sm bg-transparent cursor-pointer" x-model="district" @change="onDistrictChange()">
                             <option value="">-- Select District --</option>
-                            @foreach($districts as $division => $divDistricts)
-                                <optgroup label="{{ $division }}">
-                                    @foreach($divDistricts as $d)
-                                        <option value="{{ $d }}" {{ old('district') === $d ? 'selected' : '' }}>{{ $d }}</option>
-                                    @endforeach
-                                </optgroup>
+                            @foreach($deliveryZones as $zone)
+                                <option value="{{ $zone->district_name }}" {{ old('district') === $zone->district_name ? 'selected' : '' }}>{{ $zone->district_name }}</option>
                             @endforeach
                         </select>
                     </div>
 
                     <div>
                         <label class="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2 block">Thana / Upazila *</label>
-                        <input type="text" name="thana" value="{{ old('thana') }}" required class="w-full border-b border-gray-300 py-2 focus:outline-none focus:border-[#C9A84C] text-[#1A1A1A] text-sm bg-transparent placeholder-gray-300">
+                        <input type="text" name="thana" value="{{ old('thana') }}" class="w-full border-b border-gray-300 py-2 focus:outline-none focus:border-[#C9A84C] text-[#1A1A1A] text-sm bg-transparent placeholder-gray-300">
                     </div>
 
                     <div>
@@ -102,14 +87,14 @@ $outsideShipping = 120;
                     </div>
 
                     {{-- Delivery Estimate Banner --}}
-                    <div class="sm:col-span-2" x-show="district" x-transition>
+                    <div class="sm:col-span-2" x-show="district" style="display: none;" x-transition>
                         <div class="bg-[#F8F8F8] border border-gray-200 p-4 flex items-start gap-4">
                             <svg class="w-5 h-5 text-[#C9A84C] shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/></svg>
                             <div>
-                                <p class="text-sm font-bold tracking-wide uppercase text-[#1A1A1A] mb-1" x-text="isDhaka ? 'Dhaka Delivery' : 'Outside Dhaka Delivery'"></p>
+                                <p class="text-sm font-bold tracking-wide uppercase text-[#1A1A1A] mb-1" x-text="deliveryZoneName ? deliveryZoneName + ' Delivery' : 'Delivery'"></p>
                                 <p class="text-sm text-gray-600">
-                                    Est. Delivery: <strong class="text-[#1A1A1A] font-semibold" x-text="deliveryDate"></strong> &nbsp;|&nbsp;
-                                    Fee: <strong class="text-[#C9A84C]">৳<span x-text="shipping"></span></strong>
+                                    Est. Delivery: <strong class="text-[#1A1A1A] font-semibold" x-text="deliveryDays"></strong> &nbsp;|&nbsp;
+                                    Fee: <strong class="text-[#C9A84C]" x-show="$root.shipping > 0">৳<span x-text="shipping"></span></strong><strong class="text-[#C9A84C]" x-show="$root.shipping === 0">FREE</strong>
                                 </p>
                             </div>
                         </div>
@@ -128,6 +113,7 @@ $outsideShipping = 120;
 
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                     {{-- COD --}}
+                    @if(\App\Models\Setting::get('cod_enabled', '1') == '1' && $subtotal >= (int)\App\Models\Setting::get('cod_min_order', 0))
                     <label class="cursor-pointer group">
                         <input type="radio" name="payment_method" value="cod" checked x-model="method" class="sr-only peer">
                         <div class="border border-gray-200 bg-[#F8F8F8] p-5 text-center peer-checked:border-[#C9A84C] peer-checked:bg-white transition-all h-full flex flex-col items-center justify-center">
@@ -135,8 +121,10 @@ $outsideShipping = 120;
                             <p class="text-[10px] font-bold tracking-widest uppercase text-gray-500 peer-checked:text-[#C9A84C]">Cash On Delivery</p>
                         </div>
                     </label>
+                    @endif
 
                     {{-- SSLCommerz --}}
+                    @if(\App\Models\Setting::get('sslcommerz_enabled', '1') == '1')
                     <label class="cursor-pointer group">
                         <input type="radio" name="payment_method" value="sslcommerz" x-model="method" class="sr-only peer">
                         <div class="border border-gray-200 bg-[#F8F8F8] p-5 text-center peer-checked:border-[#C9A84C] peer-checked:bg-white transition-all h-full relative overflow-hidden flex flex-col items-center justify-center">
@@ -145,6 +133,7 @@ $outsideShipping = 120;
                             <p class="text-[10px] font-bold tracking-widest uppercase text-gray-500 peer-checked:text-[#C9A84C]">bKash/Card</p>
                         </div>
                     </label>
+                    @endif
 
                     {{-- bKash manual --}}
                     <label class="cursor-pointer group">
@@ -168,7 +157,7 @@ $outsideShipping = 120;
                 {{-- Contextual Info --}}
                 <div class="text-xs text-gray-500 border border-gray-100 p-4 bg-[#F8F8F8]">
                     <template x-if="method === 'cod'">
-                        <p>Pay with cash when your order arrives. No advance payment needed.</p>
+                        <p>{{ \App\Models\Setting::get('cod_message', 'Pay with cash when your order arrives. No advance payment needed.') }}</p>
                     </template>
                     <template x-if="method === 'sslcommerz'">
                         <p>You will be securely redirected to SSLCommerz. We accept Visa, Mastercard, AMEX, bKash, and Nagad.</p>
@@ -222,7 +211,10 @@ $outsideShipping = 120;
                         },
                         remove() { this.applied = false; this.couponDiscount = 0; this.code = ''; this.msg = ''; },
                         get grandTotal() {
-                            return Math.max(0, {{ $subtotal }} + $root.shipping - (this.applied ? this.couponDiscount : 0));
+                            const couponValue = this.applied ? this.couponDiscount : 0;
+                            const pointsValue = $root.pointsDiscount ? $root.pointsDiscount : 0;
+                            const tierDiscount = {{ $tierDiscount }};
+                            return Math.max(0, {{ $subtotal }} + $root.shipping - couponValue - pointsValue - tierDiscount);
                         }
                      }" class="border-t border-gray-200 pt-6">
 
@@ -235,10 +227,20 @@ $outsideShipping = 120;
                         <div class="flex justify-between text-sm">
                             <span class="text-gray-500 uppercase tracking-widest">Shipping</span>
                             <span class="font-semibold text-[#1A1A1A]">
-                                <template x-if="$root.district"><span>৳<span x-text="$root.shipping"></span></span></template>
+                                <template x-if="$root.district"><span><span x-show="$root.shipping === 0" class="text-[#C9A84C] text-[10px] uppercase font-bold mr-1">FREE</span>৳<span x-text="$root.shipping"></span></span></template>
                                 <template x-if="!$root.district"><span class="text-[#C9A84C] text-[10px]">Select District</span></template>
                             </span>
                         </div>
+                        
+                        {{-- VIP Discount Integration --}}
+                        @if($tierDiscount > 0)
+                        <div class="flex justify-between text-sm">
+                            <span class="text-[#1A1A1A] uppercase tracking-widest font-bold flex items-center gap-1">
+                                VIP Discount <span class="text-gray-400 text-[9px] normal-case">({{ $tierDiscountPercentage * 100 }}%)</span>
+                            </span>
+                            <span class="text-[#1A1A1A] font-bold">−৳{{ number_format($tierDiscount) }}</span>
+                        </div>
+                        @endif
 
                         <div class="flex justify-between text-sm" x-show="applied" x-transition>
                             <span class="text-[#C9A84C] uppercase tracking-widest font-bold flex items-center gap-1">
@@ -246,6 +248,28 @@ $outsideShipping = 120;
                             </span>
                             <span class="text-[#C9A84C] font-bold">−৳<span x-text="couponDiscount"></span></span>
                         </div>
+
+                        {{-- Loyalty Points Integration --}}
+                        @auth
+                            @if(auth()->user()->total_points > 0)
+                            <div class="flex justify-between text-sm items-center pt-2">
+                                <label class="flex items-center gap-2 cursor-pointer group">
+                                    <div class="relative">
+                                        <input type="checkbox" x-model="$root.usePoints" class="sr-only">
+                                        <div class="block w-8 h-4 rounded-full transition-colors" :class="$root.usePoints ? 'bg-[#C9A84C]' : 'bg-gray-200'"></div>
+                                        <div class="dot absolute left-0.5 top-0.5 bg-white w-3 h-3 rounded-full transition-transform" :class="$root.usePoints ? 'translate-x-4' : 'translate-x-0'"></div>
+                                    </div>
+                                    <span class="text-gray-500 uppercase tracking-widest text-[10px] font-bold">
+                                        Use Points <span class="font-normal">({{ number_format(auth()->user()->total_points) }} PTS)</span>
+                                    </span>
+                                </label>
+                                <span class="text-[#C9A84C] font-bold" x-show="$root.usePoints" x-transition>
+                                    −৳<span x-text="$root.pointsDiscount"></span>
+                                </span>
+                            </div>
+                            <input type="hidden" name="use_points" :value="$root.usePoints ? 1 : 0">
+                            @endif
+                        @endauth
                     </div>
 
                     {{-- Promo box --}}
@@ -264,13 +288,12 @@ $outsideShipping = 120;
                     <div class="border-t border-gray-200 pt-6 mb-8">
                         <div class="flex justify-between items-center">
                             <span class="font-bold text-[#1A1A1A] uppercase tracking-widest">Total</span>
-                            <span class="playfair text-3xl font-bold text-[#1A1A1A]">৳<span x-text="grandTotal.toLocaleString('en-IN',{maximumFractionDigits:0})">{{ number_format($subtotal) }}</span></span>
+                            <span class="playfair text-3xl font-bold text-[#1A1A1A]">৳<span x-text="grandTotal.toLocaleString('en-IN',{maximumFractionDigits:0})"></span></span>
                         </div>
                     </div>
 
                     <input type="hidden" name="coupon_code" :value="applied ? code.toUpperCase() : ''">
                     <input type="hidden" name="computed_shipping" :value="$root.shipping">
-                    <input type="hidden" name="computed_district_type" :value="$root.isDhaka ? 'dhaka' : 'outside'">
                 </div>
 
                 <button type="submit" class="btn-primary w-full py-4 bg-[#1A1A1A] hover:bg-black text-[11px] disabled:opacity-50" :disabled="!$root.district || !phoneValid">
@@ -287,22 +310,46 @@ $outsideShipping = 120;
 </div>
 
 <script>
+    const zonesData = @json($deliveryZones->keyBy('district_name'));
+    const isDiamond = {{ (auth()->check() && auth()->user()->tier === 'diamond') ? 'true' : 'false' }};
+    const isGold    = {{ (auth()->check() && auth()->user()->tier === 'gold') ? 'true' : 'false' }};
+    const subtotal  = {{ $subtotal }};
+    const freeShippingEnabled = {{ \App\Models\Setting::get('free_shipping_enabled', '0') === '1' ? 'true' : 'false' }};
+    const freeShippingMin = {{ (int)\App\Models\Setting::get('free_shipping_min_order', '999') }};
+
 function checkoutApp() {
     return {
+        zones: zonesData,
         district: '{{ old('district', '') }}',
-        isDhaka: {{ old('district') === 'Dhaka' ? 'true' : 'false' }},
-        shipping: {{ old('district') === 'Dhaka' ? $dhakaShipping : (old('district') ? $outsideShipping : 0) }},
-        deliveryDate: '',
+        shipping: 0,
+        deliveryZoneName: '',
+        deliveryDays: '',
         phone: '{{ old('phone', auth()->user()->phone ?? '') }}',
         phoneValid: true,
         phoneMsg: '',
 
+        usePoints: false,
+        get currentPoints() { return {{ auth()->check() ? auth()->user()->total_points : 0 }}; },
+        get potentialPointsDiscount() { return this.currentPoints * 0.1; },
+        get maxAllowedPointsDiscount() { return Math.max(0, {{ $subtotal }} - (this.applied ? this.couponDiscount : 0)); },
+        get pointsDiscount() { return this.usePoints ? Math.min(this.potentialPointsDiscount, this.maxAllowedPointsDiscount) : 0; },
+
         init() { if (this.district) this.onDistrictChange(); },
         onDistrictChange() {
-            this.isDhaka  = this.district === 'Dhaka';
-            this.shipping = this.isDhaka ? {{ $dhakaShipping }} : {{ $outsideShipping }};
-            const d = new Date(); d.setDate(d.getDate() + (this.isDhaka ? 2 : 5));
-            this.deliveryDate = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+            const zone = this.zones[this.district];
+            if (zone) {
+                this.deliveryZoneName = zone.district_name;
+                this.deliveryDays = zone.estimated_days;
+                if (isDiamond || (isGold && subtotal > 500) || (freeShippingEnabled && subtotal >= freeShippingMin)) {
+                    this.shipping = 0;
+                } else {
+                    this.shipping = parseFloat(zone.delivery_charge);
+                }
+            } else {
+                this.deliveryZoneName = '';
+                this.deliveryDays = '';
+                this.shipping = 0;
+            }
         },
         validatePhone() {
             const p = this.phone.trim();
@@ -313,7 +360,7 @@ function checkoutApp() {
             this.phoneMsg = 'Valid Number'; this.phoneValid = true;
         },
         applyShipping() {
-            if (!this.district) this.shipping = {{ $outsideShipping }};
+            console.log("Submitting order with zone:", this.district, parseFloat(this.shipping));
         }
     };
 }

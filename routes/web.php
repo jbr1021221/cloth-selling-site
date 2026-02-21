@@ -13,6 +13,13 @@ use App\Http\Controllers\Web\WishlistController;
 use App\Http\Controllers\Web\ReviewController;
 use App\Http\Controllers\Web\CouponController;
 use App\Http\Controllers\Web\AdminCouponController;
+use App\Http\Controllers\Web\LoyaltyController;
+use App\Http\Controllers\Web\AdminFlashSaleController;
+use App\Http\Controllers\Web\FlashSaleController;
+use App\Http\Controllers\Web\AdminDeliveryZoneController;
+use App\Http\Controllers\Web\AdminAnalyticsController;
+use App\Http\Controllers\Web\AdminInventoryReportController;
+use App\Http\Controllers\Web\AdminSettingsController;
 
 // ─── Public Routes ────────────────────────────────────────────────────────────
 
@@ -21,6 +28,9 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 // Products
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
+
+// Flash Sales
+Route::get('/flash-sale', [FlashSaleController::class, 'index'])->name('flash-sale.index');
 
 // Live search suggestions (public, returns JSON)
 Route::get('/search/suggestions', [ProductController::class, 'searchSuggestions'])->name('products.search.suggestions');
@@ -70,6 +80,9 @@ Route::middleware('auth')->group(function () {
     // Reviews
     Route::post('/products/{product}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
     Route::delete('/reviews/{review}', [ReviewController::class, 'destroy'])->name('reviews.destroy');
+
+    // Loyalty / Rewards
+    Route::get('/loyalty', [LoyaltyController::class, 'index'])->name('loyalty.index');
 });
 
 // ─── SSLCommerz Callbacks (no CSRF — SSLCommerz POSTs from their servers) ─────
@@ -91,8 +104,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
 
     // Orders
     Route::get('/orders', [AdminController::class, 'orders'])->name('orders');
+    Route::get('/orders/export', [AdminController::class, 'orderExport'])->name('orders.export');
+    Route::post('/orders/bulk-status', [AdminController::class, 'orderBulkStatus'])->name('orders.bulkStatus');
     Route::get('/orders/{order}', [AdminController::class, 'orderShow'])->name('orders.show');
     Route::patch('/orders/{order}/status', [AdminController::class, 'orderUpdateStatus'])->name('orders.updateStatus');
+    Route::patch('/orders/{order}/notes', [AdminController::class, 'orderUpdateNotes'])->name('orders.updateNotes');
+    Route::get('/orders/{order}/invoice', [AdminController::class, 'orderInvoice'])->name('orders.invoice');
 
     // Products
     Route::get('/products', [AdminController::class, 'products'])->name('products');
@@ -115,4 +132,29 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('/coupons/{coupon}/edit', [AdminCouponController::class, 'edit'])->name('coupons.edit');
     Route::put('/coupons/{coupon}', [AdminCouponController::class, 'update'])->name('coupons.update');
     Route::delete('/coupons/{coupon}', [AdminCouponController::class, 'destroy'])->name('coupons.destroy');
+
+    // Loyalty Management
+    Route::get('/loyalty', [LoyaltyController::class, 'adminIndex'])->name('loyalty.index');
+    Route::post('/loyalty/{user}/modify', [LoyaltyController::class, 'adminStore'])->name('loyalty.store');
+
+    // Flash Sales
+    Route::get('/flash-sales', [AdminFlashSaleController::class, 'index'])->name('flash-sales.index');
+    Route::post('/flash-sales', [AdminFlashSaleController::class, 'store'])->name('flash-sales.store');
+    Route::delete('/flash-sales/{flashSale}', [AdminFlashSaleController::class, 'destroy'])->name('flash-sales.destroy');
+
+    // Delivery Zones
+    Route::get('/delivery-zones', [AdminDeliveryZoneController::class, 'index'])->name('delivery-zones.index');
+    Route::put('/delivery-zones/{zone}', [AdminDeliveryZoneController::class, 'update'])->name('delivery-zones.update');
+
+    // Analytics
+    Route::get('/analytics', [AdminAnalyticsController::class, 'index'])->name('analytics');
+
+    // Reports
+    Route::get('/reports/inventory', [AdminInventoryReportController::class, 'index'])->name('reports.inventory.index');
+    Route::get('/reports/inventory/export', [AdminInventoryReportController::class, 'exportCsv'])->name('reports.inventory.export');
+    Route::post('/reports/inventory/{product}', [AdminInventoryReportController::class, 'updateStock'])->name('reports.inventory.updateStock');
+
+    // Settings
+    Route::get('/settings', [AdminSettingsController::class, 'index'])->name('settings.index');
+    Route::post('/settings/{group}', [AdminSettingsController::class, 'update'])->name('settings.update');
 });

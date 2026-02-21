@@ -43,6 +43,19 @@
 
             <div class="grid grid-cols-2 gap-4">
                 <div>
+                    <label class="text-[10px] font-bold uppercase tracking-[0.2em] text-[#1A1A1A] mb-2 block text-gray-400">Date of Birth <span class="text-[9px] lowercase italic">(for 100 pt bonus)</span></label>
+                    <input type="date" name="dob" value="{{ old('dob') }}"
+                           class="w-full border-b border-gray-300 py-2 focus:outline-none focus:border-[#C9A84C] text-[#1A1A1A] text-sm bg-transparent placeholder-gray-300 text-gray-500">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold uppercase tracking-[0.2em] text-[#1A1A1A] mb-2 block text-gray-400">Referral ID <span class="normal-case tracking-normal normal">(optional)</span></label>
+                    <input type="number" name="referred_by_id" value="{{ old('referred_by_id', request('ref')) }}"
+                           class="w-full border-b border-gray-300 py-2 focus:outline-none focus:border-[#C9A84C] text-[#1A1A1A] text-sm bg-transparent placeholder-gray-300" placeholder="Friend's ID">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
                     <label class="text-[10px] font-bold uppercase tracking-[0.2em] text-[#1A1A1A] mb-2 block">Password *</label>
                     <input type="password" name="password" required
                            class="w-full border-b border-gray-300 py-2 focus:outline-none focus:border-[#C9A84C] text-[#1A1A1A] text-sm bg-transparent placeholder-gray-300" placeholder="••••••••">

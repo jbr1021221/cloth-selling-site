@@ -23,19 +23,39 @@ class CartController extends Controller
         $request->validate([
             'product_id' => 'required|exists:products,id',
             'quantity'   => 'required|integer|min:1',
+            'variant_id' => 'nullable|exists:product_variants,id',
         ]);
 
-        $product = Product::findOrFail($request->product_id);
+        $product = Product::with('activeFlashSale')->findOrFail($request->product_id);
+        $variant = null;
+        $price = $product->getCurrentPrice();
+
+        if ($request->filled('variant_id')) {
+            $variant = \App\Models\ProductVariant::find($request->variant_id);
+            if ($variant) {
+                $price += $variant->price_modifier;
+                $request->merge([
+                    'size' => $variant->size,
+                    'color' => $variant->color,
+                ]);
+            }
+        }
+
         $cart    = session('cart', []);
-        $key     = $product->id . '-' . ($request->size ?? 'none') . '-' . ($request->color ?? 'none');
+        $key     = $product->id . '-' . ($variant ? $variant->id : ($request->size ?? 'none') . '-' . ($request->color ?? 'none'));
+
+        $activeFlashSaleId = $product->activeFlashSale ? $product->activeFlashSale->id : null;
 
         if (isset($cart[$key])) {
             $cart[$key]['quantity'] += $request->quantity;
+            $cart[$key]['flash_sale_id'] = $activeFlashSaleId;
         } else {
             $cart[$key] = [
                 'product_id' => $product->id,
+                'variant_id' => $variant ? $variant->id : null,
+                'flash_sale_id' => $activeFlashSaleId,
                 'name'       => $product->name,
-                'price'      => $product->discount_price ?? $product->price,
+                'price'      => $price,
                 'quantity'   => $request->quantity,
                 'size'       => $request->size,
                 'color'      => $request->color,
@@ -47,7 +67,13 @@ class CartController extends Controller
 
         session(['cart' => $cart]);
 
-        return back()->with('success', '"' . $product->name . '" added to cart!');
+        // BUY NOW: redirect straight to cart page
+        if ($request->input('buy_now') == '1') {
+            return redirect()->route('cart.index')
+                ->with('success', '"' . $product->name . '" added! Ready to checkout.');
+        }
+
+        return back()->with('success', '"' . $product->name . '" added to cart! ✔');
     }
 
     public function update(Request $request)

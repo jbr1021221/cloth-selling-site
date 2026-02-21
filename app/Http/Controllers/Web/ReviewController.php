@@ -19,6 +19,8 @@ class ReviewController extends Controller
             'rating' => 'required|integer|min:1|max:5',
             'title'  => 'nullable|string|max:120',
             'body'   => 'nullable|string|max:2000',
+            'images' => 'array|max:3',
+            'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:4096'
         ]);
 
         $userId = auth()->id();
@@ -32,14 +34,29 @@ class ReviewController extends Controller
             return back()->with('error', 'You have already reviewed this product.');
         }
 
-        Review::create([
+        $imageUrls = [];
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $file) {
+                // Using simple local storage directly to public output mirroring earlier controllers in project
+                $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                $file->move(public_path('uploads/reviews'), $filename);
+                $imageUrls[] = '/uploads/reviews/' . $filename;
+            }
+        }
+
+        $review = Review::create([
             'user_id'    => $userId,
             'product_id' => $product->id,
             'rating'     => $request->rating,
             'title'      => $request->title,
             'body'       => $request->body,
+            'images'     => count($imageUrls) > 0 ? $imageUrls : null,
             'approved'   => true,
         ]);
+
+        if (auth()->user()) {
+            auth()->user()->addPoints(10, 'earned', "Reviewed product: " . $product->name);
+        }
 
         return back()->with('success', 'Thank you for your review!');
     }

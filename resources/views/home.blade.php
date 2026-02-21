@@ -102,6 +102,98 @@
 </section>
 
 {{-- ═══════════════════════════════════════════════════════════════════════ --}}
+{{-- FLASH SALES                                                              --}}
+{{-- ═══════════════════════════════════════════════════════════════════════ --}}
+@if(isset($flashSales) && $flashSales->count() > 0)
+<section class="py-16 sm:py-24 bg-[#FAF8F5]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-end justify-between mb-10">
+            <div>
+                <span class="text-xs font-semibold tracking-[0.35em] uppercase text-red-600 block mb-2 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"></path></svg>
+                    ⚡ FLASH SALE — ENDS IN:
+                </span>
+                <h2 class="section-heading gold-underline">Limited Time Offers</h2>
+            </div>
+            <a href="{{ route('flash-sale.index') }}" class="text-xs font-semibold tracking-widest uppercase text-[#1A1A1A] hover:text-[#C9A84C] transition-colors flex items-center gap-2 hidden sm:flex">
+                View All Deals
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+            @foreach($flashSales as $sale)
+                <div class="bg-white border text-center border-[#C9A84C]/20 shadow-sm relative group overflow-hidden">
+                    <div class="absolute top-2 left-2 z-10 bg-red-600 text-white text-[9px] font-bold uppercase tracking-widest px-3 py-1 shadow-sm flex items-center gap-1">
+                        Sale
+                    </div>
+
+                    <div class="relative aspect-[4/5] bg-gray-50 flex items-center justify-center overflow-hidden">
+                        <a href="{{ route('products.show', $sale->product_id) }}" class="block w-full h-full">
+                            @if(is_array($sale->product->images) && count($sale->product->images) > 0)
+                                <img src="{{ $sale->product->images[0] }}" alt="{{ $sale->product->name }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                            @else
+                                <img src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=600" class="w-full h-full object-cover">
+                            @endif
+                        </a>
+                    </div>
+
+                    <div class="p-4 flex flex-col items-center">
+                        <p class="text-[9px] uppercase tracking-widest text-gray-400 font-bold mb-1">{{ $sale->product->category }}</p>
+                        <h3 class="text-xs font-bold uppercase tracking-widest text-[#1A1A1A] mb-3 truncate w-full px-2 text-center">{{ $sale->product->name }}</h3>
+                        
+                        <div class="flex items-center gap-2 mb-4 justify-center">
+                            <span class="text-sm font-extrabold text-[#C9A84C] tracking-wide">৳{{ number_format($sale->sale_price) }}</span>
+                            <span class="text-[10px] text-gray-400 line-through tracking-wide">৳{{ number_format($sale->product->price) }}</span>
+                        </div>
+
+                        {{-- Progress --}}
+                        <div class="w-full px-2 mb-4">
+                            <div class="flex justify-between text-[9px] text-[#1A1A1A] font-bold uppercase tracking-widest mb-1.5">
+                                <span>{{ $sale->sold_count }} Sold</span>
+                                <span>{{ $sale->max_quantity }} Total</span>
+                            </div>
+                            <div class="w-full bg-gray-100 h-1 relative overflow-hidden">
+                                <div class="absolute left-0 top-0 h-full bg-red-600" style="width: {{ min(100, ($sale->sold_count / $sale->max_quantity) * 100) }}%"></div>
+                            </div>
+                        </div>
+
+                        {{-- Timer --}}
+                        <div class="w-full px-2 border-t border-gray-100 pt-3" x-data="{
+                            endsAt: new Date('{{ $sale->ends_at->toIso8601String() }}').getTime(),
+                            h: '00', m: '00', s: '00',
+                            init() {
+                                this.updateTimer();
+                                setInterval(() => { this.updateTimer() }, 1000);
+                            },
+                            updateTimer() {
+                                const distance = this.endsAt - new Date().getTime();
+                                if(distance < 0) return;
+                                this.h = String(Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))).padStart(2, '0');
+                                this.m = String(Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
+                                this.s = String(Math.floor((distance % (1000 * 60)) / 1000)).padStart(2, '0');
+                            }
+                        }">
+                            <div class="flex items-center justify-center gap-1.5 text-red-600 font-mono text-[9px] font-bold uppercase tracking-widest">
+                                <span>Ends In:</span>
+                                <span class="bg-red-50 text-red-600 border border-red-100 px-1 py-0.5"><span x-text="h"></span>H</span>:
+                                <span class="bg-red-50 text-red-600 border border-red-100 px-1 py-0.5"><span x-text="m"></span>M</span>:
+                                <span class="bg-red-50 text-red-600 border border-red-100 px-1 py-0.5"><span x-text="s"></span>S</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+        
+        <div class="text-center mt-10 sm:hidden">
+            <a href="{{ route('flash-sale.index') }}" class="btn-outline-dark">View All Deals</a>
+        </div>
+    </div>
+</section>
+@endif
+
+{{-- ═══════════════════════════════════════════════════════════════════════ --}}
 {{-- 3. SHOP BY CATEGORY                                                       --}}
 {{-- ═══════════════════════════════════════════════════════════════════════ --}}
 <section class="py-16 sm:py-24 bg-white">

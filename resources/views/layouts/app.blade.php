@@ -95,13 +95,14 @@
      x-data="{
          mobileOpen: false,
          searchOpen: false,
+         searchQuery: '{{ request('search') }}',
          scrolled: false,
          init() { window.addEventListener('scroll', () => this.scrolled = window.scrollY > 20); }
      }">
 
     {{-- Desktop navbar row --}}
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="grid grid-cols-3 items-center h-16 sm:h-20">
+        <div class="grid grid-cols-[auto_1fr_auto] items-center h-16 sm:h-20">
 
             {{-- Left: Logo --}}
             <div class="flex items-center">
@@ -249,6 +250,7 @@
 
     {{-- Search bar (slides down) --}}
     <div x-show="searchOpen"
+         x-cloak
          x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="opacity-0 -translate-y-2"
          x-transition:enter-end="opacity-100 translate-y-0"
@@ -258,10 +260,23 @@
          class="border-t border-gray-100 bg-gray-50">
         <div class="max-w-2xl mx-auto px-4 py-4">
             <form method="GET" action="{{ route('products.index') }}" class="relative">
-                <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/></svg>
-                <input type="text" name="search" value="{{ request('search') }}"
+                {{-- Search icon left --}}
+                <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/></svg>
+                {{-- Input --}}
+                <input type="text" name="search"
+                       x-model="searchQuery"
                        placeholder="Search for products, categories..."
-                       class="input pl-11 text-sm">
+                       autocomplete="off"
+                       class="input pl-11 pr-10 text-sm w-full">
+                {{-- Clear × button: only visible when searchQuery has text --}}
+                <button type="button"
+                        x-show="searchQuery.length > 0"
+                        x-cloak
+                        @click="searchQuery = ''; $nextTick(() => $el.previousElementSibling.focus())"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 z-10 p-1.5 text-gray-400 hover:text-[#1A1A1A] transition-colors"
+                        aria-label="Clear search">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
             </form>
         </div>
     </div>
