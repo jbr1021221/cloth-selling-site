@@ -15,6 +15,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
         ]);
+
+        // Exclude SSLCommerz callback routes from CSRF verification
+        // (SSLCommerz POSTs to these from their own servers)
+        $middleware->validateCsrfTokens(except: [
+            'sslcommerz/*',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

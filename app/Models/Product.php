@@ -23,9 +23,9 @@ class Product extends Model
     ];
 
     protected $casts = [
-        'images' => 'array',
-        'sizes' => 'array',
-        'colors' => 'array',
+        'images'    => 'array',
+        'sizes'     => 'array',
+        'colors'    => 'array',
         'is_active' => 'boolean',
     ];
 
@@ -38,4 +38,10 @@ class Product extends Model
     {
         return $this->hasMany(OrderItem::class);
     }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class)->where('approved', true)->latest();
+    }
 }
+

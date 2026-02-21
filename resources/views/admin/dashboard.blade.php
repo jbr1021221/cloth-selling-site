@@ -8,10 +8,11 @@
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
     @php
         $stats = [
-            ['label' => 'Total Orders',    'value' => $totalOrders,    'icon' => '📦', 'color' => 'indigo'],
-            ['label' => 'Total Revenue',   'value' => '৳' . number_format($totalRevenue), 'icon' => '💰', 'color' => 'emerald'],
-            ['label' => 'Total Products',  'value' => $totalProducts,  'icon' => '👔', 'color' => 'purple'],
-            ['label' => 'Total Customers', 'value' => $totalCustomers, 'icon' => '👤', 'color' => 'blue'],
+            ['label' => 'Total Orders',    'value' => $totalOrders,    'icon' => '📦', 'color' => 'indigo', 'link' => route('admin.orders')],
+            ['label' => 'Total Revenue',   'value' => '৳' . number_format($totalRevenue), 'icon' => '💰', 'color' => 'emerald', 'link' => route('admin.orders')],
+            ['label' => 'Total Products',  'value' => $totalProducts,  'icon' => '👔', 'color' => 'purple', 'link' => route('admin.products')],
+            ['label' => 'Total Customers', 'value' => $totalCustomers, 'icon' => '👤', 'color' => 'blue',   'link' => route('admin.users')],
+            ['label' => 'Active Coupons',  'value' => \App\Models\Coupon::where('is_active', true)->count(), 'icon' => '🎟️', 'color' => 'amber', 'link' => route('admin.coupons.index')],
         ];
     @endphp
     @foreach($stats as $stat)

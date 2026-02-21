@@ -35,4 +35,26 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Alpha SMS (Bangladesh)
+    |--------------------------------------------------------------------------
+    | REST API for sending SMS to Bangladeshi numbers.
+    | Get your API key from: https://alphasms.com.bd
+    */
+    'alpha_sms' => [
+        'api_key'   => env('ALPHA_SMS_API_KEY', ''),
+        'sender_id' => env('ALPHA_SMS_SENDER_ID', 'ClothStore'),
+        'base_url'  => env('ALPHA_SMS_URL', 'https://alphasms.com.bd/api/v1/send'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Admin Notification Settings
+    |--------------------------------------------------------------------------
+    */
+    'admin' => [
+        'email' => env('ADMIN_EMAIL', ''),
+    ],
+
 ];

@@ -8,6 +8,11 @@ use App\Http\Controllers\Web\CheckoutController;
 use App\Http\Controllers\Web\AuthController;
 use App\Http\Controllers\Web\OrderController;
 use App\Http\Controllers\Web\AdminController;
+use App\Http\Controllers\Web\SslcommerzController;
+use App\Http\Controllers\Web\WishlistController;
+use App\Http\Controllers\Web\ReviewController;
+use App\Http\Controllers\Web\CouponController;
+use App\Http\Controllers\Web\AdminCouponController;
 
 // ─── Public Routes ────────────────────────────────────────────────────────────
 
@@ -16,6 +21,12 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 // Products
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
+
+// Live search suggestions (public, returns JSON)
+Route::get('/search/suggestions', [ProductController::class, 'searchSuggestions'])->name('products.search.suggestions');
+
+// Coupon validation (public — guests can apply coupons too)
+Route::post('/coupon/apply', [CouponController::class, 'apply'])->name('coupon.apply');
 
 // Category shortcut (redirects to products with filter)
 Route::get('/products/category/{category}', function ($category) {
@@ -44,10 +55,34 @@ Route::middleware('auth')->group(function () {
     Route::post('/checkout', [CheckoutController::class, 'place'])->name('checkout.place');
     Route::get('/checkout/success/{order}', [CheckoutController::class, 'success'])->name('checkout.success');
 
+    // SSLCommerz – initiate payment (auth required)
+    Route::post('/checkout/sslcommerz/initiate', [CheckoutController::class, 'initiateSSLCommerz'])
+        ->name('checkout.sslcommerz.initiate');
+
     // Orders (customer)
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+
+    // Wishlist
+    Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
+    Route::post('/wishlist/{product}/toggle', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
+
+    // Reviews
+    Route::post('/products/{product}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+    Route::delete('/reviews/{review}', [ReviewController::class, 'destroy'])->name('reviews.destroy');
 });
+
+// ─── SSLCommerz Callbacks (no CSRF — SSLCommerz POSTs from their servers) ─────
+// These are excluded from CSRF in bootstrap/app.php (see below)
+Route::controller(SslcommerzController::class)
+    ->prefix('sslcommerz')
+    ->name('sslc.')
+    ->group(function () {
+        Route::post('success', 'success')->name('success');
+        Route::post('failure', 'failure')->name('failure');
+        Route::post('cancel',  'cancel')->name('cancel');
+        Route::post('ipn',     'ipn')->name('ipn');
+    });
 
 // ─── Admin Routes ─────────────────────────────────────────────────────────────
 
@@ -72,4 +107,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
 
     // Vendors
     Route::get('/vendors', [AdminController::class, 'vendors'])->name('vendors');
+
+    // Coupons
+    Route::get('/coupons', [AdminCouponController::class, 'index'])->name('coupons.index');
+    Route::get('/coupons/create', [AdminCouponController::class, 'create'])->name('coupons.create');
+    Route::post('/coupons', [AdminCouponController::class, 'store'])->name('coupons.store');
+    Route::get('/coupons/{coupon}/edit', [AdminCouponController::class, 'edit'])->name('coupons.edit');
+    Route::put('/coupons/{coupon}', [AdminCouponController::class, 'update'])->name('coupons.update');
+    Route::delete('/coupons/{coupon}', [AdminCouponController::class, 'destroy'])->name('coupons.destroy');
 });

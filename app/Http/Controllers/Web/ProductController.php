@@ -53,6 +53,58 @@ class ProductController extends Controller
             ->take(4)
             ->get();
 
-        return view('products.show', compact('product', 'relatedProducts'));
+        // Reviews data
+        $reviews    = $product->reviews()->with('user')->get();
+        $avgRating  = $reviews->avg('rating') ?? 0;
+        $ratingCount = $reviews->count();
+        $userReview = auth()->check()
+            ? $reviews->firstWhere('user_id', auth()->id())
+            : null;
+
+        return view('products.show', compact('product', 'relatedProducts', 'reviews', 'avgRating', 'ratingCount', 'userReview'));
+    }
+
+    /**
+     * Live search suggestions endpoint.
+     * GET /search/suggestions?q=keyword
+     * Returns up to 8 matching active products as JSON.
+     */
+    public function searchSuggestions(Request $request)
+    {
+        $query = trim($request->get('q', ''));
+
+        if (strlen($query) < 2) {
+            return response()->json([]);
+        }
+
+        $products = Product::where('is_active', true)
+            ->where(function ($q) use ($query) {
+                $q->where('name',        'LIKE', "%{$query}%")
+                  ->orWhere('category',  'LIKE', "%{$query}%")
+                  ->orWhere('description', 'LIKE', "%{$query}%");
+            })
+            ->orderByRaw("CASE WHEN name LIKE ? THEN 0 ELSE 1 END", ["{$query}%"]) // exact-prefix first
+            ->take(8)
+            ->get(['id', 'name', 'category', 'price', 'discount_price', 'images', 'stock']);
+
+        $fallbackImage = 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=120&auto=format&fit=crop';
+
+        return response()->json(
+            $products->map(fn($p) => [
+                'id'          => $p->id,
+                'name'        => $p->name,
+                'category'    => $p->category,
+                'price'       => ($p->discount_price && $p->discount_price < $p->price)
+                                     ? $p->discount_price
+                                     : $p->price,
+                'original'    => $p->price,
+                'has_discount'=> $p->discount_price && $p->discount_price < $p->price,
+                'image'       => is_array($p->images) && count($p->images) > 0
+                                     ? $p->images[0]
+                                     : $fallbackImage,
+                'stock'       => $p->stock,
+                'url'         => route('products.show', $p->id),
+            ])
+        );
     }
 }

@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
+use App\Services\SmsService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class AdminController extends Controller
@@ -57,7 +59,27 @@ class AdminController extends Controller
     public function orderUpdateStatus(Request $request, Order $order)
     {
         $request->validate(['status' => 'required|in:pending,processing,shipped,delivered,cancelled']);
+
+        $previousStatus = $order->status;
         $order->update(['status' => $request->status]);
+
+        // ── Send "Shipped" SMS to customer ───────────────────────────────────
+        if ($request->status === 'shipped' && $previousStatus !== 'shipped') {
+            $address       = $order->delivery_address ?? [];
+            $customerPhone = $address['phone'] ?? null;
+            $customerName  = $address['name']  ?? 'Customer';
+
+            if ($customerPhone) {
+                $smsMessage = "Dear {$customerName}, great news! Your order #{$order->order_number} "
+                            . "has been shipped and is on its way to you. "
+                            . "Expected delivery: Dhaka 1-2 days | Outside Dhaka 3-5 days. "
+                            . "Thank you for shopping with ClothStore! - ClothStore BD";
+
+                app(SmsService::class)->send($customerPhone, $smsMessage);
+            }
+        }
+        // ─────────────────────────────────────────────────────────────────────
+
         return back()->with('success', 'Order status updated.');
     }
 
@@ -83,7 +105,7 @@ class AdminController extends Controller
 
     public function productStore(Request $request)
     {
-        $data = $request->validate([
+        $request->validate([
             'name'           => 'required|string|max:255',
             'description'    => 'required|string',
             'category'       => 'required|string',
@@ -91,18 +113,35 @@ class AdminController extends Controller
             'discount_price' => 'nullable|numeric|min:0',
             'stock'          => 'required|integer|min:0',
             'sku'            => 'nullable|string|max:100',
-            'is_active'      => 'required|boolean',
+            'is_active'      => 'required|in:0,1',
             'sizes'          => 'nullable|string',
             'colors'         => 'nullable|string',
-            'images'         => 'nullable|string',
+            'images'         => 'nullable|array',
+            'images.*'       => 'image|mimes:jpeg,png,jpg,webp,gif|max:4096',
         ]);
 
-        $data['sizes']  = $this->parseCommaList($request->sizes);
-        $data['colors'] = $this->parseCommaList($request->colors);
-        $data['images'] = $this->parseCommaList($request->images);
-        $data['sku']    = $data['sku'] ?: strtoupper(Str::random(8));
+        // Upload images
+        $imagePaths = [];
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $file) {
+                $path = $file->store('products', 'public');
+                $imagePaths[] = Storage::url($path);  // /storage/products/filename.jpg
+            }
+        }
 
-        Product::create($data);
+        Product::create([
+            'name'           => $request->name,
+            'description'    => $request->description,
+            'category'       => $request->category,
+            'price'          => $request->price,
+            'discount_price' => $request->discount_price,
+            'stock'          => $request->stock,
+            'sku'            => $request->sku ?: strtoupper(Str::random(8)),
+            'is_active'      => (bool) $request->is_active,
+            'sizes'          => $this->parseCommaList($request->sizes),
+            'colors'         => $this->parseCommaList($request->colors),
+            'images'         => $imagePaths,
+        ]);
 
         return redirect()->route('admin.products')->with('success', 'Product created successfully!');
     }
@@ -114,7 +153,7 @@ class AdminController extends Controller
 
     public function productUpdate(Request $request, Product $product)
     {
-        $data = $request->validate([
+        $request->validate([
             'name'           => 'required|string|max:255',
             'description'    => 'required|string',
             'category'       => 'required|string',
@@ -122,23 +161,62 @@ class AdminController extends Controller
             'discount_price' => 'nullable|numeric|min:0',
             'stock'          => 'required|integer|min:0',
             'sku'            => 'nullable|string|max:100',
-            'is_active'      => 'required|boolean',
+            'is_active'      => 'required|in:0,1',
             'sizes'          => 'nullable|string',
             'colors'         => 'nullable|string',
-            'images'         => 'nullable|string',
+            'images'         => 'nullable|array',
+            'images.*'       => 'image|mimes:jpeg,png,jpg,webp,gif|max:4096',
+            'delete_images'  => 'nullable|array',  // array of image URLs to remove
+            'delete_images.*'=> 'nullable|string',
         ]);
 
-        $data['sizes']  = $this->parseCommaList($request->sizes);
-        $data['colors'] = $this->parseCommaList($request->colors);
-        $data['images'] = $this->parseCommaList($request->images);
+        // Start with existing images, remove any flagged for deletion
+        $existingImages = is_array($product->images) ? $product->images : [];
 
-        $product->update($data);
+        if ($request->filled('delete_images')) {
+            foreach ($request->delete_images as $urlToDelete) {
+                // Convert public URL back to storage path and delete file
+                $storagePath = str_replace('/storage/', 'public/', $urlToDelete);
+                Storage::delete($storagePath);
+                $existingImages = array_filter($existingImages, fn($img) => $img !== $urlToDelete);
+            }
+        }
+
+        // Upload new images and append
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $file) {
+                $path = $file->store('products', 'public');
+                $existingImages[] = Storage::url($path);
+            }
+        }
+
+        $product->update([
+            'name'           => $request->name,
+            'description'    => $request->description,
+            'category'       => $request->category,
+            'price'          => $request->price,
+            'discount_price' => $request->discount_price,
+            'stock'          => $request->stock,
+            'sku'            => $request->sku,
+            'is_active'      => (bool) $request->is_active,
+            'sizes'          => $this->parseCommaList($request->sizes),
+            'colors'         => $this->parseCommaList($request->colors),
+            'images'         => array_values($existingImages),
+        ]);
 
         return redirect()->route('admin.products')->with('success', 'Product updated successfully!');
     }
 
     public function productDestroy(Product $product)
     {
+        // Delete all uploaded images from storage
+        if (is_array($product->images)) {
+            foreach ($product->images as $url) {
+                $storagePath = str_replace('/storage/', 'public/', $url);
+                Storage::delete($storagePath);
+            }
+        }
+
         $product->delete();
         return back()->with('success', 'Product deleted.');
     }
