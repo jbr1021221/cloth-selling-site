@@ -170,7 +170,7 @@
                     <a href="{{ route('login') }}" class="hidden sm:flex items-center gap-1.5 text-xs font-semibold tracking-widest uppercase text-[#1A1A1A] hover:text-[#C9A84C] transition-colors px-3 py-2.5">Login</a>
                     <a href="{{ route('register') }}" class="hidden sm:flex btn-primary text-[10px] px-4 py-2.5">Join Us</a>
                 @else
-                    <div class="relative" x-data="{ open: false }">
+                    <div class="relative overflow-visible" x-data="{ open: false }">
                         <button @click="open = !open"
                                 class="flex items-center gap-2 p-2 text-[#1A1A1A] hover:text-[#C9A84C] transition-colors"
                                 aria-label="Account">
@@ -179,11 +179,15 @@
                             </div>
                             <svg class="w-3 h-3 hidden sm:block transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                         </button>
-                        <div x-show="open" @click.away="open = false"
+                        {{-- Floating dropdown: min-w-[220px] + right-0 keeps it anchored to avatar, never full-screen --}}
+                        <div x-show="open" x-cloak @click.away="open = false"
                              x-transition:enter="transition ease-out duration-150"
                              x-transition:enter-start="opacity-0 translate-y-1"
                              x-transition:enter-end="opacity-100 translate-y-0"
-                             class="absolute right-0 mt-2 w-56 bg-white border border-gray-100 shadow-xl py-2 z-50">
+                             x-transition:leave="transition ease-in duration-100"
+                             x-transition:leave-start="opacity-100"
+                             x-transition:leave-end="opacity-0"
+                             class="absolute right-0 mt-2 min-w-[220px] w-56 bg-white border border-gray-100 shadow-xl py-2 z-[999]">
                             <div class="px-5 py-3 border-b border-gray-100">
                                 <p class="text-sm font-semibold text-[#1A1A1A] truncate">{{ auth()->user()->name }}</p>
                                 <p class="text-xs text-gray-400 truncate mb-2">{{ auth()->user()->email }}</p>

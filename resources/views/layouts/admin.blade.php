@@ -3,89 +3,179 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title', 'Admin') — ClothStore</title>
+    <title>@yield('title', 'Admin Dashboard') — ClothStore</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        .btn-admin-primary { background-color: #C9A84C; color: white; padding: 0.75rem 1.5rem; font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; transition: background-color 0.2s; }
+        .btn-admin-primary:hover { background-color: #b08a38; }
+        .btn-admin-danger { background-color: #ef4444; color: white; padding: 0.75rem 1.5rem; font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; transition: background-color 0.2s; }
+        .btn-admin-danger:hover { background-color: #dc2626; }
+        .btn-admin-secondary { background-color: white; color: #1A1A1A; border: 1px solid #e5e7eb; padding: 0.75rem 1.5rem; font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; transition: all 0.2s; }
+        .btn-admin-secondary:hover { border-color: #C9A84C; color: #C9A84C; }
+        /* Prevent Alpine.js flash before JS loads */
+        [x-cloak] { display: none !important; }
+    </style>
 </head>
-<body class="bg-gray-950 text-gray-100 font-sans">
+<body class="bg-[#F8F8F8] text-[#1A1A1A] font-sans antialiased" x-data="{ sidebarOpen: false }">
 
 <div class="flex h-screen overflow-hidden">
 
+    {{-- Mobile Sidebar Overlay --}}
+    <div x-show="sidebarOpen"
+         x-cloak
+         @click="sidebarOpen = false"
+         class="fixed inset-0 bg-black/50 z-40 lg:hidden"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+    </div>
+
     {{-- Sidebar --}}
-    <aside class="w-64 flex-shrink-0 bg-gray-900 border-r border-gray-800 flex flex-col">
-        <div class="p-6 border-b border-gray-800">
-            <div class="flex items-center gap-2">
-                <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">C</div>
+    {{-- Mobile: starts off-screen (-translate-x-full) and slides in when sidebarOpen = true.
+         Desktop (lg+): static, always visible in the flex row via lg:translate-x-0. --}}
+    <aside class="fixed inset-y-0 left-0 z-50 w-[280px] max-w-[280px] bg-white border-r border-gray-200 flex flex-col transition-transform duration-300
+                  lg:static lg:z-auto lg:w-64 lg:flex-shrink-0 lg:translate-x-0 -translate-x-full"
+           :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'">
+        
+        {{-- Logo Area with mobile close button --}}
+        <div class="h-20 flex items-center px-6 border-b border-gray-100 flex-shrink-0">
+            <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 flex-1">
+                <div class="w-8 h-8 flex items-center justify-center border border-[#C9A84C] text-[#C9A84C] font-bold text-lg">C</div>
                 <div>
-                    <p class="font-bold text-white text-sm">ClothStore</p>
-                    <p class="text-xs text-indigo-400">Admin Panel</p>
+                    <h2 class="font-bold text-[#1A1A1A] tracking-wider uppercase text-sm">{{ \App\Models\Setting::get('store_name', 'ClothStore') }}</h2>
+                    <p class="text-[10px] text-gray-400 tracking-widest uppercase">Admin</p>
                 </div>
-            </div>
+            </a>
+            {{-- Close button — mobile only --}}
+            <button @click="sidebarOpen = false"
+                    class="lg:hidden ml-auto p-2 text-gray-400 hover:text-[#1A1A1A] transition-colors"
+                    aria-label="Close sidebar">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
         </div>
 
-        <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
+        {{-- Navigation --}}
+        <nav class="flex-1 py-6 overflow-y-auto space-y-1">
             @php
                 $navItems = [
-                    ['route' => 'admin.dashboard',  'icon' => '📊', 'label' => 'Dashboard'],
-                    ['route' => 'admin.orders',      'icon' => '📦', 'label' => 'Orders'],
-                    ['route' => 'admin.products',    'icon' => '👔', 'label' => 'Products'],
-                    ['route' => 'admin.users',       'icon' => '👤', 'label' => 'Customers'],
-                    ['route' => 'admin.vendors',     'icon' => '🏭', 'label' => 'Vendors'],
+                    ['route' => 'admin.dashboard',     'icon' => '📊', 'label' => 'Dashboard'],
+                    ['route' => 'admin.analytics',     'icon' => '📈', 'label' => 'Sales Analytics'],
+                    ['route' => 'admin.orders',        'icon' => '📦', 'label' => 'Orders'],
+                    ['route' => 'admin.products',      'icon' => '👔', 'label' => 'Products'],
+                    ['route' => 'admin.reports.inventory.index', 'icon' => '📋', 'label' => 'Inventory Report'],
+                    ['route' => 'admin.users',         'icon' => '👤', 'label' => 'Customers'],
+                    ['route' => 'admin.vendors',       'icon' => '🏭', 'label' => 'Vendors'],
+                    ['route' => 'admin.delivery-zones.index', 'icon' => '🚚', 'label' => 'Delivery Zones'],
+                    ['route' => 'admin.flash-sales.index', 'icon' => '⚡', 'label' => 'Flash Sales'],
+                    ['route' => 'admin.coupons.index', 'icon' => '🎟️', 'label' => 'Coupons'],
+                    ['route' => 'admin.loyalty.index', 'icon' => '🎫', 'label' => 'Loyalty Points'],
+                    ['route' => '#',                   'icon' => '📱', 'label' => 'SMS Marketing'],
+                    ['route' => 'admin.settings.index','icon' => '⚙️', 'label' => 'Settings'],
                 ];
             @endphp
+            
             @foreach($navItems as $item)
-                <a href="{{ route($item['route']) }}"
-                   class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all
-                          {{ request()->routeIs($item['route']) ? 'bg-indigo-600/20 text-indigo-400 border border-indigo-500/30' : 'text-gray-400 hover:text-white hover:bg-gray-800' }}">
-                    <span>{{ $item['icon'] }}</span>
-                    {{ $item['label'] }}
+                @php 
+                    $isActive = $item['route'] !== '#' && request()->routeIs(str_replace('.index', '.*', $item['route']) . '*');
+                    // simple active check
+                    if($item['route'] == 'admin.dashboard') $isActive = request()->routeIs('admin.dashboard');
+                @endphp
+                <a href="{{ $item['route'] !== '#' ? route($item['route']) : '#' }}"
+                   @click="sidebarOpen = false"
+                   class="flex items-center gap-3 px-8 py-3 text-sm transition-all border-l-[3px]
+                          {{ $isActive ? 'border-[#C9A84C] text-[#C9A84C] bg-[#F8F8F8] font-bold' : 'border-transparent text-gray-500 hover:text-[#1A1A1A] hover:bg-gray-50 font-medium' }}">
+                    <span class="text-lg {{ $isActive ? 'opacity-100' : 'opacity-70 grayscale' }}">{{ $item['icon'] }}</span>
+                    <span class="uppercase tracking-widest text-[11px]">{{ $item['label'] }}</span>
                 </a>
             @endforeach
         </nav>
 
-        <div class="p-4 border-t border-gray-800">
-            <div class="flex items-center gap-3 px-4 py-2 rounded-xl bg-gray-800 mb-2">
-                <div class="w-7 h-7 bg-indigo-600 rounded-full flex items-center justify-center text-xs font-bold text-white">
-                    {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
-                </div>
-                <div class="min-w-0">
-                    <p class="text-xs font-medium text-white truncate">{{ auth()->user()->name }}</p>
-                    <p class="text-xs text-gray-500 truncate">{{ auth()->user()->email }}</p>
-                </div>
-            </div>
+        {{-- Bottom Action --}}
+        <div class="p-6 border-t border-gray-100 flex-shrink-0">
+            <a href="{{ route('home') }}" target="_blank" class="flex items-center gap-2 px-4 py-2 text-[10px] uppercase tracking-widest font-bold text-gray-500 hover:text-[#1A1A1A] transition-colors mb-4">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                View Store
+            </a>
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
-                <button type="submit" class="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-400 hover:bg-gray-800 rounded-xl transition-colors">
-                    🚪 Sign Out
+                <button type="submit" class="w-full flex items-center justify-center gap-2 border border-gray-200 text-[#1A1A1A] hover:border-[#1A1A1A] bg-white text-[10px] uppercase tracking-widest font-bold py-3 transition-colors">
+                    Log Out
                 </button>
             </form>
-            <a href="{{ route('home') }}" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-500 hover:text-gray-300 hover:bg-gray-800 rounded-xl transition-colors">
-                🌐 View Store
-            </a>
         </div>
     </aside>
 
-    {{-- Main Content --}}
-    <div class="flex-1 flex flex-col overflow-hidden">
-        {{-- Top bar --}}
-        <header class="bg-gray-900 border-b border-gray-800 px-6 py-4 flex items-center justify-between flex-shrink-0">
-            <h1 class="text-xl font-bold text-white">@yield('page-title', 'Dashboard')</h1>
-            @if(session('success'))
-                <div class="flex items-center gap-2 bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 text-sm px-4 py-2 rounded-xl">
-                    ✓ {{ session('success') }}
+    {{-- Main Content — always full width on mobile, flex-1 on desktop --}}
+    <div class="flex-1 flex flex-col overflow-hidden min-w-0">
+        
+        {{-- Top Bar --}}
+        <header class="h-20 bg-white border-b border-gray-200 px-4 sm:px-8 flex items-center justify-between flex-shrink-0">
+            {{-- Mobile Toggle & Title --}}
+            <div class="flex items-center gap-4">
+                <button @click="sidebarOpen = true" class="lg:hidden text-gray-500 hover:text-[#1A1A1A]">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                </button>
+                <h1 class="text-lg font-bold text-[#1A1A1A] uppercase tracking-widest">
+                    @yield('page-title', 'Dashboard')
+                </h1>
+            </div>
+
+            {{-- Right Actions --}}
+            <div class="flex items-center gap-6">
+                
+                {{-- Notification Bell --}}
+                @php
+                    $pendingOrdersCount = \App\Models\Order::where('status', 'pending')->count();
+                @endphp
+                <a href="{{ route('admin.orders') }}" class="relative text-gray-400 hover:text-[#C9A84C] transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                    @if($pendingOrdersCount > 0)
+                        <span class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#1A1A1A] text-[9px] font-bold text-white border border-white">
+                            {{ $pendingOrdersCount }}
+                        </span>
+                    @endif
+                </a>
+
+                {{-- User Info --}}
+                <div class="hidden sm:flex items-center gap-3 pl-6 border-l border-gray-200">
+                    <div class="text-right">
+                        <p class="text-xs font-bold text-[#1A1A1A] uppercase tracking-widest">{{ auth()->user()->name }}</p>
+                        <p class="text-[10px] text-gray-400 uppercase tracking-widest">Administrator</p>
+                    </div>
+                    <div class="w-10 h-10 border border-gray-200 bg-[#F8F8F8] flex items-center justify-center text-[#1A1A1A] font-bold text-sm">
+                        {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                    </div>
                 </div>
-            @endif
-            @if(session('error'))
-                <div class="flex items-center gap-2 bg-red-600/20 border border-red-500/30 text-red-400 text-sm px-4 py-2 rounded-xl">
-                    ✗ {{ session('error') }}
-                </div>
-            @endif
+            </div>
         </header>
 
+        {{-- Alerts --}}
+        @if(session('success') || session('error'))
+            <div class="px-8 pt-6 pb-0 flex-shrink-0">
+                @if(session('success'))
+                    <div class="bg-green-50 border border-green-200 text-green-700 text-[11px] font-bold uppercase tracking-widest px-4 py-3 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        {{ session('success') }}
+                    </div>
+                @endif
+                @if(session('error'))
+                    <div class="bg-red-50 border border-red-200 text-red-700 text-[11px] font-bold uppercase tracking-widest px-4 py-3 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        {{ session('error') }}
+                    </div>
+                @endif
+            </div>
+        @endif
+
         {{-- Page Content --}}
-        <main class="flex-1 overflow-y-auto p-6">
+        <main class="flex-1 overflow-y-auto p-4 sm:p-8">
             @yield('content')
         </main>
+        
     </div>
 </div>
 
