@@ -94,7 +94,7 @@ $districts = []; // Replaced by delivery_zones from DB
                                 <p class="text-sm font-bold tracking-wide uppercase text-[#1A1A1A] mb-1" x-text="deliveryZoneName ? deliveryZoneName + ' Delivery' : 'Delivery'"></p>
                                 <p class="text-sm text-gray-600">
                                     Est. Delivery: <strong class="text-[#1A1A1A] font-semibold" x-text="deliveryDays"></strong> &nbsp;|&nbsp;
-                                    Fee: <strong class="text-[#C9A84C]" x-show="$root.shipping > 0">৳<span x-text="shipping"></span></strong><strong class="text-[#C9A84C]" x-show="$root.shipping === 0">FREE</strong>
+                                    Fee: <strong class="text-[#C9A84C]" x-show="shipping > 0">৳<span x-text="shipping"></span></strong><strong class="text-[#C9A84C]" x-show="shipping === 0">FREE</strong>
                                 </p>
                             </div>
                         </div>
@@ -192,32 +192,6 @@ $districts = []; // Replaced by delivery_zones from DB
                 </div>
 
                 {{-- Totals Alpine --}}
-                <div x-data="{
-                        code: '', applied: false, loading: false, couponDiscount: 0, msg: '', msgType: '',
-                        async apply() {
-                            if (!this.code.trim() || this.loading) return;
-                            this.loading = true; this.msg = ''; this.applied = false;
-                            try {
-                                const res  = await fetch('{{ route('coupon.apply') }}', {
-                                    method: 'POST',
-                                    headers: {'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},
-                                    body: JSON.stringify({ code: this.code, subtotal: {{ $subtotal }} }),
-                                });
-                                const data = await res.json();
-                                this.msg = data.message; this.msgType = data.valid ? 'success' : 'error';
-                                if (data.valid) { this.applied = true; this.couponDiscount = data.discount; }
-                            } catch(e) { this.msg = 'Error applying coupon.'; this.msgType = 'error'; }
-                            finally { this.loading = false; }
-                        },
-                        remove() { this.applied = false; this.couponDiscount = 0; this.code = ''; this.msg = ''; },
-                        get grandTotal() {
-                            const couponValue = this.applied ? this.couponDiscount : 0;
-                            const pointsValue = $root.pointsDiscount ? $root.pointsDiscount : 0;
-                            const tierDiscount = {{ $tierDiscount }};
-                            return Math.max(0, {{ $subtotal }} + $root.shipping - couponValue - pointsValue - tierDiscount);
-                        }
-                     }" class="border-t border-gray-200 pt-6">
-
                     <div class="space-y-4 mb-6">
                         <div class="flex justify-between text-sm">
                             <span class="text-gray-500 uppercase tracking-widest">Subtotal</span>
@@ -227,8 +201,8 @@ $districts = []; // Replaced by delivery_zones from DB
                         <div class="flex justify-between text-sm">
                             <span class="text-gray-500 uppercase tracking-widest">Shipping</span>
                             <span class="font-semibold text-[#1A1A1A]">
-                                <template x-if="$root.district"><span><span x-show="$root.shipping === 0" class="text-[#C9A84C] text-[10px] uppercase font-bold mr-1">FREE</span>৳<span x-text="$root.shipping"></span></span></template>
-                                <template x-if="!$root.district"><span class="text-[#C9A84C] text-[10px]">Select District</span></template>
+                                <template x-if="district"><span><span x-show="shipping === 0" class="text-[#C9A84C] text-[10px] uppercase font-bold mr-1">FREE</span>৳<span x-text="shipping"></span></span></template>
+                                <template x-if="!district"><span class="text-[#C9A84C] text-[10px]">Select District</span></template>
                             </span>
                         </div>
                         
@@ -242,9 +216,9 @@ $districts = []; // Replaced by delivery_zones from DB
                         </div>
                         @endif
 
-                        <div class="flex justify-between text-sm" x-show="applied" x-transition>
+                        <div class="flex justify-between text-sm" x-show="couponApplied" x-transition>
                             <span class="text-[#C9A84C] uppercase tracking-widest font-bold flex items-center gap-1">
-                                Coupon (<span x-text="code"></span>)
+                                Coupon (<span x-text="couponCode"></span>)
                             </span>
                             <span class="text-[#C9A84C] font-bold">−৳<span x-text="couponDiscount"></span></span>
                         </div>
@@ -255,34 +229,34 @@ $districts = []; // Replaced by delivery_zones from DB
                             <div class="flex justify-between text-sm items-center pt-2">
                                 <label class="flex items-center gap-2 cursor-pointer group">
                                     <div class="relative">
-                                        <input type="checkbox" x-model="$root.usePoints" class="sr-only">
-                                        <div class="block w-8 h-4 rounded-full transition-colors" :class="$root.usePoints ? 'bg-[#C9A84C]' : 'bg-gray-200'"></div>
-                                        <div class="dot absolute left-0.5 top-0.5 bg-white w-3 h-3 rounded-full transition-transform" :class="$root.usePoints ? 'translate-x-4' : 'translate-x-0'"></div>
+                                        <input type="checkbox" x-model="usePoints" class="sr-only">
+                                        <div class="block w-8 h-4 rounded-full transition-colors" :class="usePoints ? 'bg-[#C9A84C]' : 'bg-gray-200'"></div>
+                                        <div class="dot absolute left-0.5 top-0.5 bg-white w-3 h-3 rounded-full transition-transform" :class="usePoints ? 'translate-x-4' : 'translate-x-0'"></div>
                                     </div>
                                     <span class="text-gray-500 uppercase tracking-widest text-[10px] font-bold">
                                         Use Points <span class="font-normal">({{ number_format(auth()->user()->total_points) }} PTS)</span>
                                     </span>
                                 </label>
-                                <span class="text-[#C9A84C] font-bold" x-show="$root.usePoints" x-transition>
-                                    −৳<span x-text="$root.pointsDiscount"></span>
+                                <span class="text-[#C9A84C] font-bold" x-show="usePoints" x-transition>
+                                    −৳<span x-text="pointsDiscount"></span>
                                 </span>
                             </div>
-                            <input type="hidden" name="use_points" :value="$root.usePoints ? 1 : 0">
+                            <input type="hidden" name="use_points" :value="usePoints ? 1 : 0">
                             @endif
                         @endauth
                     </div>
 
                     {{-- Promo box --}}
                     <div class="mb-6">
-                        <div class="flex border border-gray-300 bg-white" x-show="!applied">
-                            <input type="text" x-model="code" @keydown.enter.prevent="apply()" placeholder="Promo code" class="w-full px-4 py-3 text-xs uppercase tracking-widest focus:outline-none">
-                            <button type="button" @click="apply()" :disabled="loading || !code.trim()" class="px-4 text-xs font-bold uppercase tracking-widest border-l border-gray-300 text-[#1A1A1A] hover:bg-gray-50 disabled:opacity-50 transition-colors">Apply</button>
+                        <div class="flex border border-gray-300 bg-white" x-show="!couponApplied">
+                            <input type="text" x-model="couponCode" @keydown.enter.prevent="applyCoupon()" placeholder="Promo code" class="w-full px-4 py-3 text-xs uppercase tracking-widest focus:outline-none">
+                            <button type="button" @click="applyCoupon()" :disabled="couponLoading || !couponCode.trim()" class="px-4 text-xs font-bold uppercase tracking-widest border-l border-gray-300 text-[#1A1A1A] hover:bg-gray-50 disabled:opacity-50 transition-colors">Apply</button>
                         </div>
-                        <div class="flex items-center justify-between border border-[#C9A84C] bg-[#C9A84C]/5 px-4 py-3" x-show="applied" x-transition>
-                            <span class="text-xs font-bold uppercase tracking-widest text-[#C9A84C]" x-text="'Applied: ' + code"></span>
-                            <button type="button" @click="remove()" class="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500 hover:text-red-500">Remove</button>
+                        <div class="flex items-center justify-between border border-[#C9A84C] bg-[#C9A84C]/5 px-4 py-3" x-show="couponApplied" x-transition>
+                            <span class="text-xs font-bold uppercase tracking-widest text-[#C9A84C]" x-text="'Applied: ' + couponCode"></span>
+                            <button type="button" @click="removeCoupon()" class="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500 hover:text-red-500">Remove</button>
                         </div>
-                        <p class="text-[10px] mt-2 uppercase tracking-widest" x-show="msg" :class="msgType === 'success' ? 'text-green-600' : 'text-red-500'" x-text="msg"></p>
+                        <p class="text-[10px] mt-2 uppercase tracking-widest" x-show="couponMsg" :class="couponMsgType === 'success' ? 'text-green-600' : 'text-red-500'" x-text="couponMsg"></p>
                     </div>
 
                     <div class="border-t border-gray-200 pt-6 mb-8">
@@ -292,11 +266,10 @@ $districts = []; // Replaced by delivery_zones from DB
                         </div>
                     </div>
 
-                    <input type="hidden" name="coupon_code" :value="applied ? code.toUpperCase() : ''">
-                    <input type="hidden" name="computed_shipping" :value="$root.shipping">
-                </div>
+                    <input type="hidden" name="coupon_code" :value="couponApplied ? couponCode.toUpperCase() : ''">
+                    <input type="hidden" name="computed_shipping" :value="shipping">
 
-                <button type="submit" class="btn-primary w-full py-4 bg-[#1A1A1A] hover:bg-black text-[11px] disabled:opacity-50" :disabled="!$root.district || !phoneValid">
+                <button type="submit" class="btn-primary w-full py-4 bg-[#1A1A1A] hover:bg-black text-[11px] disabled:opacity-50" :disabled="!district || !phoneValid">
                     Place Order
                 </button>
 
@@ -329,12 +302,30 @@ function checkoutApp() {
         phoneMsg: '',
 
         usePoints: false,
+        couponCode: '',
+        couponApplied: false,
+        couponLoading: false,
+        couponDiscount: 0,
+        couponMsg: '',
+        couponMsgType: '',
+
         get currentPoints() { return {{ auth()->check() ? auth()->user()->total_points : 0 }}; },
         get potentialPointsDiscount() { return this.currentPoints * 0.1; },
-        get maxAllowedPointsDiscount() { return Math.max(0, {{ $subtotal }} - (this.applied ? this.couponDiscount : 0)); },
+        get maxAllowedPointsDiscount() { return Math.max(0, subtotal - (this.couponApplied ? this.couponDiscount : 0)); },
         get pointsDiscount() { return this.usePoints ? Math.min(this.potentialPointsDiscount, this.maxAllowedPointsDiscount) : 0; },
+        
+        get grandTotal() {
+            const couponValue = this.couponApplied ? this.couponDiscount : 0;
+            const pointsValue = this.pointsDiscount;
+            const tierDiscount = {{ $tierDiscount }};
+            return Math.max(0, subtotal + this.shipping - couponValue - pointsValue - tierDiscount);
+        },
 
-        init() { if (this.district) this.onDistrictChange(); },
+        init() { 
+            if (this.district) this.onDistrictChange(); 
+            if (this.phone) this.validatePhone();
+            else this.phoneValid = false;
+        },
         onDistrictChange() {
             const zone = this.zones[this.district];
             if (zone) {
@@ -351,6 +342,22 @@ function checkoutApp() {
                 this.shipping = 0;
             }
         },
+        async applyCoupon() {
+            if (!this.couponCode.trim() || this.couponLoading) return;
+            this.couponLoading = true; this.couponMsg = ''; this.couponApplied = false;
+            try {
+                const res  = await fetch('{{ route('coupon.apply') }}', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},
+                    body: JSON.stringify({ code: this.couponCode, subtotal: subtotal }),
+                });
+                const data = await res.json();
+                this.couponMsg = data.message; this.couponMsgType = data.valid ? 'success' : 'error';
+                if (data.valid) { this.couponApplied = true; this.couponDiscount = data.discount; }
+            } catch(e) { this.couponMsg = 'Error applying coupon.'; this.couponMsgType = 'error'; }
+            finally { this.couponLoading = false; }
+        },
+        removeCoupon() { this.couponApplied = false; this.couponDiscount = 0; this.couponCode = ''; this.couponMsg = ''; },
         validatePhone() {
             const p = this.phone.trim();
             if (!p) { this.phoneMsg = ''; this.phoneValid = false; return; }
