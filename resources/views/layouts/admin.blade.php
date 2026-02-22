@@ -132,15 +132,63 @@
                 {{-- Notification Bell --}}
                 @php
                     $pendingOrdersCount = \App\Models\Order::where('status', 'pending')->count();
+                    $recentPendingOrders = \App\Models\Order::where('status', 'pending')->latest()->take(5)->get();
                 @endphp
-                <a href="{{ route('admin.orders') }}" class="relative text-gray-400 hover:text-[#C9A84C] transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-                    @if($pendingOrdersCount > 0)
-                        <span class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#1A1A1A] text-[9px] font-bold text-white border border-white">
-                            {{ $pendingOrdersCount }}
-                        </span>
-                    @endif
-                </a>
+                <div class="relative" x-data="{ open: false }">
+                    <button @click="open = !open" class="relative text-gray-400 hover:text-[#C9A84C] transition-colors focus:outline-none pt-1">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                        </svg>
+                        @if($pendingOrdersCount > 0)
+                            <span class="absolute top-0 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#1A1A1A] text-[9px] font-bold text-white border border-white">
+                                {{ $pendingOrdersCount }}
+                            </span>
+                        @endif
+                    </button>
+
+                    <div x-show="open" 
+                         x-cloak 
+                         @click.away="open = false"
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 translate-y-1"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-150"
+                         x-transition:leave-start="opacity-100 translate-y-0"
+                         x-transition:leave-end="opacity-0 translate-y-1"
+                         class="absolute right-0 mt-3 w-80 bg-white border border-gray-100 shadow-xl z-50">
+                        
+                        <div class="p-4 border-b border-gray-50 flex items-center justify-between">
+                            <h3 class="text-[10px] font-bold uppercase tracking-widest text-[#1A1A1A]">Pending Orders</h3>
+                            <span class="bg-[#C9A84C] text-white text-[9px] font-bold px-2 py-0.5">{{ $pendingOrdersCount }}</span>
+                        </div>
+
+                        <div class="max-h-96 overflow-y-auto">
+                            @forelse($recentPendingOrders as $pOrder)
+                                <a href="{{ route('admin.orders.show', $pOrder->id) }}" class="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0">
+                                    <div class="w-10 h-10 bg-[#F8F8F8] flex items-center justify-center text-[#C9A84C] font-bold text-xs uppercase shrink-0">
+                                        {{ substr($pOrder->delivery_address['name'] ?? 'C', 0, 1) }}
+                                    </div>
+                                    <div class="flex-1 min-w-0 text-left">
+                                        <p class="text-[11px] font-bold text-[#1A1A1A] uppercase tracking-wider truncate">#{{ $pOrder->order_number }}</p>
+                                        <p class="text-[10px] text-gray-400 mt-0.5 truncate">{{ $pOrder->delivery_address['name'] ?? 'N/A' }}</p>
+                                    </div>
+                                    <div class="text-[9px] text-gray-400 uppercase font-medium shrink-0">
+                                        {{ $pOrder->created_at->diffForHumans(null, true) }}
+                                    </div>
+                                </a>
+                            @empty
+                                <div class="p-8 text-center text-gray-400">
+                                    <div class="text-2xl mb-2">📦</div>
+                                    <p class="text-[10px] uppercase tracking-widest">No pending orders</p>
+                                </div>
+                            @endforelse
+                        </div>
+
+                        <a href="{{ route('admin.orders') }}" @click="open = false" class="block p-4 text-center text-[10px] font-bold uppercase tracking-widest text-[#C9A84C] border-t border-gray-50 hover:bg-gray-50 transition-colors">
+                            View All Orders &rarr;
+                        </a>
+                    </div>
+                </div>
 
                 {{-- User Info --}}
                 <div class="hidden sm:flex items-center gap-3 pl-6 border-l border-gray-200">
